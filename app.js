@@ -140,7 +140,7 @@ const DRUM_KITS = {
   }
 };
 
-const APPROACH_TIME = 1.8;
+const APPROACH_TIME = 2.2;
 const HIT_WINDOW = 0.16;
 const GOOD_WINDOW = 0.1;
 const PERFECT_WINDOW = 0.05;
@@ -202,6 +202,7 @@ let combo = 0;
 let maxCombo = 0;
 let hits = 0;
 let misses = 0;
+let lastClickBeat = -1;
 
 let judgementTimer = null;
 let perfectPulseTimer = null;
@@ -390,6 +391,7 @@ function startSong() {
   activeNotes = [];
   isRunning = true;
   jamModeActive = false;
+  lastClickBeat = -1;
   startTimeMs = performance.now();
 
   setStatus(`Playing ${activeSong.title}...`);
@@ -567,6 +569,17 @@ function gameLoop(now) {
   const elapsed = (now - startTimeMs) / 1000;
 
   renderCountdown(elapsed);
+
+  if (elapsed >= LEAD_IN) {
+    const beatDuration = 60 / activeSong.bpm;
+    const currentBeat = Math.floor((elapsed - LEAD_IN) / beatDuration);
+    if (currentBeat !== lastClickBeat) {
+      lastClickBeat = currentBeat;
+      const isDownbeat = currentBeat % 4 === 0;
+      playMetronomeClick(isDownbeat);
+    }
+  }
+
   spawnBeatGuides(elapsed);
   positionBeatGuides(elapsed);
   spawnNotes(elapsed);
@@ -1091,6 +1104,23 @@ function formatKey(key) {
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function playMetronomeClick(isDownbeat) {
+  const engine = getAudioEngine();
+  if (!engine || !audioReady) return;
+  const ctx = engine.ctx;
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = isDownbeat ? 1200 : 900;
+  gain.gain.setValueAtTime(isDownbeat ? 0.18 : 0.1, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+  osc.connect(gain);
+  gain.connect(engine.output);
+  osc.start(now);
+  osc.stop(now + 0.05);
 }
 
 function playLaneSound(lane) {

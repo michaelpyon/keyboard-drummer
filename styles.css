@@ -371,6 +371,20 @@ select:focus-visible {
   background: var(--lane-crash);
 }
 
+.lane::after {
+  content: "";
+  position: absolute;
+  bottom: 86px; /* matches HIT_LINE_OFFSET */
+  left: calc(50% - 26px);
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+  z-index: 1;
+  pointer-events: none;
+}
+
 .lane.pressed {
   background: rgba(255, 255, 255, 0.12);
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.2);
@@ -544,41 +558,48 @@ select:focus-visible {
 .note {
   position: absolute;
   top: 0;
-  left: 11%;
-  width: 78%;
-  height: 22px;
-  border-radius: 999px;
+  left: calc(50% - 26px);
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   z-index: 2;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.35);
   will-change: transform;
 }
 
 .note-hihat {
-  background: linear-gradient(90deg, #2ea9ff, #60e4ff);
+  background: linear-gradient(135deg, #2ea9ff, #60e4ff);
+  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.25), 0 0 14px rgba(59, 183, 255, 0.6);
 }
 
 .note-snare {
-  background: linear-gradient(90deg, #16c6a2, #62ffd6);
+  background: linear-gradient(135deg, #16c6a2, #62ffd6);
+  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.25), 0 0 14px rgba(32, 217, 181, 0.6);
 }
 
 .note-bass {
-  background: linear-gradient(90deg, #f5bd36, #ffe781);
+  background: linear-gradient(135deg, #f5bd36, #ffe781);
+  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.25), 0 0 14px rgba(255, 207, 73, 0.6);
 }
 
 .note-lowtom {
-  background: linear-gradient(90deg, #ff8b2b, #ffca66);
+  background: linear-gradient(135deg, #ff8b2b, #ffca66);
+  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.25), 0 0 14px rgba(255, 158, 61, 0.6);
 }
 
 .note-hightom {
-  background: linear-gradient(90deg, #ff9f45, #ffd06f);
+  background: linear-gradient(135deg, #ff9f45, #ffd06f);
+  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.25), 0 0 14px rgba(255, 165, 77, 0.6);
 }
 
 .note-ride {
-  background: linear-gradient(90deg, #7388ff, #aeb8ff);
+  background: linear-gradient(135deg, #7388ff, #aeb8ff);
+  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.25), 0 0 14px rgba(139, 156, 255, 0.6);
 }
 
 .note-crash {
-  background: linear-gradient(90deg, #ff5f73, #ff8a66);
+  background: linear-gradient(135deg, #ff5f73, #ff8a66);
+  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.25), 0 0 14px rgba(255, 95, 115, 0.6);
 }
 
 .judgement,
