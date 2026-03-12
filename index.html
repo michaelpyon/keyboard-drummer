@@ -13,7 +13,17 @@
   <div class="bg-shape shape-a" aria-hidden="true"></div>
   <div class="bg-shape shape-b" aria-hidden="true"></div>
 
-  <main class="app">
+  <!-- Audio unlock overlay — required by browser autoplay policy -->
+  <div id="audioOverlay" class="audio-overlay" role="dialog" aria-modal="true" aria-label="Start game">
+    <div class="audio-overlay-card">
+      <p class="audio-overlay-icon">🥁</p>
+      <h2>Keyboard Drummer</h2>
+      <p>Tap anywhere to enable audio and start playing.</p>
+      <button id="audioStartBtn" type="button">Start Drumming</button>
+    </div>
+  </div>
+
+  <main class="app" id="appMain" style="display:none">
     <header class="hero reveal-1">
       <p class="eyebrow">Arcade Drum Rhythm</p>
       <h1>Keyboard Drummer</h1>
@@ -111,5 +121,31 @@
   </main>
 
   <script src="app.js"></script>
+  <script>
+    (function () {
+      var overlay = document.getElementById('audioOverlay');
+      var appMain = document.getElementById('appMain');
+      var btn = document.getElementById('audioStartBtn');
+
+      function unlock() {
+        // Create and resume AudioContext synchronously during user gesture
+        var Ctx = window.AudioContext || window.webkitAudioContext;
+        if (Ctx) {
+          var ctx = new Ctx();
+          ctx.resume().then(function () { ctx.close(); });
+        }
+        overlay.style.display = 'none';
+        appMain.style.display = '';
+        // Focus game area so keyboard events register immediately
+        var ga = document.getElementById('gameArea');
+        if (ga) { ga.focus({ preventScroll: true }); }
+      }
+
+      btn.addEventListener('click', unlock);
+      overlay.addEventListener('click', function (e) {
+        if (e.target !== btn) unlock();
+      });
+    }());
+  </script>
 </body>
 </html>

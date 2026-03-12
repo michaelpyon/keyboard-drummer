@@ -829,3 +829,59 @@ select:focus-visible {
     opacity: 0;
   }
 }
+
+/* ── Audio Unlock Overlay ─────────────────────────────────────── */
+.audio-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-0);
+}
+
+.audio-overlay-card {
+  text-align: center;
+  padding: 2.5rem 2rem;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 1rem;
+  max-width: 340px;
+  width: 90%;
+}
+
+.audio-overlay-icon {
+  font-size: 3rem;
+  margin: 0 0 0.75rem;
+}
+
+.audio-overlay-card h2 {
+  font-family: "Bungee", sans-serif;
+  font-size: 1.5rem;
+  color: var(--accent-1);
+  margin: 0 0 0.5rem;
+}
+
+.audio-overlay-card p {
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  margin: 0 0 1.5rem;
+}
+
+#audioStartBtn {
+  background: var(--accent-1);
+  color: var(--bg-0);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.75rem 2rem;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+#audioStartBtn:hover {
+  opacity: 0.85;
+}
