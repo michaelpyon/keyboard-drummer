@@ -20,6 +20,19 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <div id="mobile-notice" style="display:none; position:fixed; inset:0; z-index:9999; background:#1a1a2e; color:#e0e0e0; font-family:'Space Grotesk',system-ui,sans-serif; padding:2rem; text-align:center; flex-direction:column; justify-content:center; align-items:center; gap:1.5rem;">
+    <div style="font-size:3rem;">🥁</div>
+    <h1 style="font-size:1.4rem; font-weight:700; margin:0;">Keyboard Drummer Needs a Keyboard</h1>
+    <p style="font-size:0.95rem; color:#999; max-width:320px; line-height:1.5; margin:0 auto;">This rhythm game maps drum sounds to your keyboard keys. You'll need a desktop or laptop to play.</p>
+    <a href="https://pyon.dev" style="color:#4ade80; font-size:0.9rem; text-decoration:none;">← Back to pyon.dev</a>
+  </div>
+  <script>
+    if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth < 768) {
+      document.getElementById('mobile-notice').style.display = 'flex';
+      document.getElementById('audioOverlay').style.display = 'none';
+      document.getElementById('appMain').style.display = 'none';
+    }
+  </script>
   <div class="bg-shape shape-a" aria-hidden="true"></div>
   <div class="bg-shape shape-b" aria-hidden="true"></div>
 
