@@ -417,8 +417,12 @@ function startSong() {
   activeNotes = [];
   isRunning = true;
   jamModeActive = false;
-  lastClickBeat = -1;
   startTimeMs = performance.now();
+
+  // Start the precise metronome scheduler. First beat fires after LEAD_IN seconds.
+  const _startEngine = getAudioEngine();
+  const _audioLeadIn = _startEngine ? _startEngine.ctx.currentTime + LEAD_IN : LEAD_IN;
+  startMetronomeScheduler(activeSong.bpm, _audioLeadIn);
 
   setStatus(`Playing ${activeSong.title}...`);
   countdownEl.textContent = "Ready";
@@ -595,16 +599,6 @@ function gameLoop(now) {
   const elapsed = (now - startTimeMs) / 1000;
 
   renderCountdown(elapsed);
-
-  if (elapsed >= LEAD_IN) {
-    const beatDuration = 60 / activeSong.bpm;
-    const currentBeat = Math.floor((elapsed - LEAD_IN) / beatDuration);
-    if (currentBeat !== lastClickBeat) {
-      lastClickBeat = currentBeat;
-      const isDownbeat = currentBeat % 4 === 0;
-      playMetronomeClick(isDownbeat);
-    }
-  }
 
   spawnBeatGuides(elapsed);
   positionBeatGuides(elapsed);
@@ -934,6 +928,7 @@ function stopLoop() {
     cancelAnimationFrame(rafId);
     rafId = null;
   }
+  stopMetronomeScheduler();
 }
 
 function updateStats() {
@@ -1151,21 +1146,63 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-function playMetronomeClick(isDownbeat) {
+// ---------------------------------------------------------------------------
+// Metronome lookahead scheduler
+// Beats are scheduled METRO_LOOKAHEAD_SEC ahead of AudioContext.currentTime so
+// the Web Audio engine receives precise timestamps instead of "play now" calls
+// that arrive late due to RAF jitter. The setTimeout loop runs at METRO_INTERVAL_MS
+// but audio events fire at exact beat boundaries regardless of JS timing noise.
+// ---------------------------------------------------------------------------
+
+function startMetronomeScheduler(bpm, audioStartTime) {
+  stopMetronomeScheduler();
+  metronomeBpm        = bpm;
+  nextMetronomeTime   = audioStartTime;
+  metronomeBeatIndex  = 0;
+  runMetronomeScheduler();
+}
+
+function runMetronomeScheduler() {
   const engine = getAudioEngine();
-  if (!engine || !audioReady) return;
-  const ctx = engine.ctx;
-  const now = ctx.currentTime;
-  const osc = ctx.createOscillator();
+  if (engine && audioReady) {
+    const ctx         = engine.ctx;
+    const beatDur     = 60 / metronomeBpm;
+
+    // If we fell behind (e.g. audio was suspended at start), fast-forward
+    // to the nearest upcoming beat rather than spamming every missed one.
+    if (nextMetronomeTime < ctx.currentTime) {
+      const behind       = Math.ceil((ctx.currentTime - nextMetronomeTime) / beatDur);
+      nextMetronomeTime += behind * beatDur;
+      metronomeBeatIndex += behind;
+    }
+
+    while (nextMetronomeTime < ctx.currentTime + METRO_LOOKAHEAD_SEC) {
+      scheduleMetronomeClick(ctx, engine.output, nextMetronomeTime, metronomeBeatIndex % 4 === 0);
+      nextMetronomeTime  += beatDur;
+      metronomeBeatIndex += 1;
+    }
+  }
+  metronomeSchedulerId = setTimeout(runMetronomeScheduler, METRO_INTERVAL_MS);
+}
+
+function stopMetronomeScheduler() {
+  if (metronomeSchedulerId !== null) {
+    clearTimeout(metronomeSchedulerId);
+    metronomeSchedulerId = null;
+  }
+}
+
+function scheduleMetronomeClick(ctx, output, when, isDownbeat) {
+  const osc  = ctx.createOscillator();
   const gain = ctx.createGain();
-  osc.type = 'sine';
+  osc.type           = 'sine';
   osc.frequency.value = isDownbeat ? 1200 : 900;
-  gain.gain.setValueAtTime(isDownbeat ? 0.18 : 0.1, now);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+  gain.gain.setValueAtTime(isDownbeat ? 0.18 : 0.1, when);
+  gain.gain.exponentialRampToValueAtTime(0.001, when + 0.04);
   osc.connect(gain);
-  gain.connect(engine.output);
-  osc.start(now);
-  osc.stop(now + 0.05);
+  gain.connect(output);
+  osc.start(when);
+  osc.stop(when + 0.05);
 }
 
 function playLaneSound(lane) {
