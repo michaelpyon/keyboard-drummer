@@ -371,6 +371,36 @@ select:focus-visible {
   background: var(--lane-crash);
 }
 
+/* Lane-specific pressed flash colors */
+.lane[data-lane="hihat"].pressed {
+  background: rgba(60, 183, 255, 0.28);
+  box-shadow: inset 0 0 40px rgba(60, 183, 255, 0.25), 0 0 24px rgba(60, 183, 255, 0.12);
+}
+.lane[data-lane="snare"].pressed {
+  background: rgba(32, 217, 181, 0.28);
+  box-shadow: inset 0 0 40px rgba(32, 217, 181, 0.25), 0 0 24px rgba(32, 217, 181, 0.12);
+}
+.lane[data-lane="bass"].pressed {
+  background: rgba(255, 207, 73, 0.28);
+  box-shadow: inset 0 0 40px rgba(255, 207, 73, 0.25), 0 0 24px rgba(255, 207, 73, 0.12);
+}
+.lane[data-lane="lowtom"].pressed {
+  background: rgba(255, 158, 61, 0.28);
+  box-shadow: inset 0 0 40px rgba(255, 158, 61, 0.25), 0 0 24px rgba(255, 158, 61, 0.12);
+}
+.lane[data-lane="hightom"].pressed {
+  background: rgba(255, 165, 77, 0.28);
+  box-shadow: inset 0 0 40px rgba(255, 165, 77, 0.25), 0 0 24px rgba(255, 165, 77, 0.12);
+}
+.lane[data-lane="ride"].pressed {
+  background: rgba(139, 156, 255, 0.28);
+  box-shadow: inset 0 0 40px rgba(139, 156, 255, 0.25), 0 0 24px rgba(139, 156, 255, 0.12);
+}
+.lane[data-lane="crash"].pressed {
+  background: rgba(255, 95, 115, 0.28);
+  box-shadow: inset 0 0 40px rgba(255, 95, 115, 0.25), 0 0 24px rgba(255, 95, 115, 0.12);
+}
+
 .lane::after {
   content: "";
   position: absolute;
@@ -386,8 +416,44 @@ select:focus-visible {
 }
 
 .lane.pressed {
-  background: rgba(255, 255, 255, 0.12);
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.3), 0 0 30px rgba(255, 255, 255, 0.08);
+}
+
+/* Note burst on hit */
+.note-hit {
+  pointer-events: none;
+  animation: noteBurst 280ms ease-out forwards;
+}
+.note-hit-perfect {
+  box-shadow: 0 0 24px 8px rgba(87, 246, 202, 0.9), 0 0 48px 16px rgba(87, 246, 202, 0.4);
+  border-color: rgba(87, 246, 202, 1);
+}
+.note-hit-good {
+  box-shadow: 0 0 20px 6px rgba(127, 218, 255, 0.85), 0 0 40px 12px rgba(127, 218, 255, 0.35);
+  border-color: rgba(127, 218, 255, 1);
+}
+.note-hit-ok {
+  box-shadow: 0 0 16px 4px rgba(255, 215, 127, 0.8), 0 0 32px 10px rgba(255, 215, 127, 0.3);
+  border-color: rgba(255, 215, 127, 1);
+}
+
+@keyframes noteBurst {
+  0% {
+    transform: translateY(var(--y, 0)) scale(1);
+    opacity: 1;
+    filter: brightness(1);
+  }
+  30% {
+    transform: translateY(var(--y, 0)) scale(1.8);
+    opacity: 1;
+    filter: brightness(2.5);
+  }
+  100% {
+    transform: translateY(var(--y, 0)) scale(2.5);
+    opacity: 0;
+    filter: brightness(3);
+  }
 }
 
 .lane-name,
@@ -1007,4 +1073,24 @@ select:focus-visible {
 
 .btn-play-again:hover {
   opacity: 0.85;
+}
+
+/* Hit particles */
+.hit-particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 8;
+  animation: particleBurst 400ms ease-out forwards;
+}
+
+@keyframes particleBurst {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(0.3);
+    opacity: 0;
+  }
 }

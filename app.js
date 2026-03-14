@@ -1028,6 +1028,44 @@ function triggerHitFx(lane, quality) {
   }
 
   spawnStreakLines(lane, quality);
+  if (quality === "perfect" || (quality === "good" && combo >= 5)) {
+    spawnParticles(lane, quality);
+  }
+}
+
+function spawnParticles(lane, quality) {
+  if (!flashLayer) return;
+  const laneIdx = LANE_VISUAL_INDEX.get(lane);
+  const centerX = laneIdx === undefined ? 50 : ((laneIdx + 0.5) / LANE_META.length) * 100;
+  const hitY = gameArea.clientHeight - HIT_LINE_OFFSET;
+  const count = quality === "perfect" ? 8 : 4;
+  const colors = {
+    perfect: ["#57f6ca", "#48ffd9", "#87ffdb"],
+    good: ["#7fdaff", "#60c8ff", "#a0e0ff"],
+    ok: ["#ffd77f", "#ffcf49", "#ffe680"]
+  };
+  const palette = colors[quality] || colors.ok;
+
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement("div");
+    p.className = "hit-particle";
+    const angle = (Math.PI * 2 * i) / count + (Math.random() * 0.4 - 0.2);
+    const dist = 40 + Math.random() * 60;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist - 30;
+    const size = 3 + Math.random() * 4;
+    p.style.cssText = `
+      left: ${centerX}%;
+      top: ${hitY}px;
+      width: ${size}px;
+      height: ${size}px;
+      background: ${palette[Math.floor(Math.random() * palette.length)]};
+      --dx: ${dx}px;
+      --dy: ${dy}px;
+    `;
+    flashLayer.appendChild(p);
+    p.addEventListener("animationend", () => p.remove());
+  }
 }
 
 function spawnStreakLines(lane, quality) {
