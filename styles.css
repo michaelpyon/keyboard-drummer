@@ -1,4 +1,7 @@
 :root {
+  --font-display: 'Bungee', cursive;
+  --font-body: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
   --bg-0: #09131c;
   --bg-1: #12283a;
   --panel: rgba(8, 21, 32, 0.78);
@@ -27,7 +30,7 @@ body {
   margin: 0;
   min-height: 100vh;
   color: var(--text-main);
-  font-family: "Space Grotesk", "Segoe UI", sans-serif;
+  font-family: var(--font-body);
   background:
     radial-gradient(circle at 18% 14%, rgba(114, 216, 255, 0.22), transparent 38%),
     radial-gradient(circle at 86% 80%, rgba(255, 158, 61, 0.18), transparent 34%),
@@ -86,7 +89,7 @@ body {
 h1,
 h2 {
   margin: 0;
-  font-family: "Bungee", "Trebuchet MS", sans-serif;
+  font-family: var(--font-display);
   letter-spacing: 0.03em;
 }
 
@@ -191,6 +194,8 @@ select:focus-visible {
 
 .stat strong {
   font-size: 1.38rem;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
 }
 
 .status {
@@ -675,12 +680,12 @@ select:focus-visible {
   transform: translateX(-50%);
   z-index: 6;
   text-transform: uppercase;
-  font-family: "Bungee", "Trebuchet MS", sans-serif;
   letter-spacing: 0.08em;
   pointer-events: none;
 }
 
 .judgement {
+  font-family: var(--font-display);
   top: 16%;
   min-width: 10ch;
   font-size: clamp(1.45rem, 3vw, 2.5rem);
@@ -710,6 +715,8 @@ select:focus-visible {
 }
 
 .countdown {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   top: 6%;
   font-size: clamp(1.3rem, 3.1vw, 2.2rem);
   color: #d9f4ff;
@@ -944,7 +951,7 @@ select:focus-visible {
 }
 
 .audio-overlay-card h2 {
-  font-family: "Bungee", sans-serif;
+  font-family: var(--font-display);
   font-size: 1.5rem;
   color: var(--accent-1);
   margin: 0 0 0.5rem;
@@ -962,7 +969,7 @@ select:focus-visible {
   border: none;
   border-radius: 0.5rem;
   padding: 0.75rem 2rem;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
@@ -1006,7 +1013,7 @@ select:focus-visible {
 }
 
 .share-modal-title {
-  font-family: "Bungee", sans-serif;
+  font-family: var(--font-display);
   font-size: 1.5rem;
   color: var(--accent-1);
   margin: 0 0 1.25rem;
@@ -1043,7 +1050,7 @@ select:focus-visible {
   border: 1px solid rgba(255,255,255,0.18);
   border-radius: 0.5rem;
   padding: 0.6rem 1.2rem;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: var(--font-body);
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
@@ -1064,7 +1071,7 @@ select:focus-visible {
   border: none;
   border-radius: 0.5rem;
   padding: 0.6rem 1.2rem;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: var(--font-body);
   font-size: 0.9rem;
   font-weight: 700;
   cursor: pointer;
