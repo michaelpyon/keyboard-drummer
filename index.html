@@ -20,13 +20,91 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .mobile-gate {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #0f172a;
+      color: #e0e0e0;
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      padding: 2rem;
+      text-align: center;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 1.5rem;
+      overflow-y: auto;
+    }
+    .mobile-gate h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      margin: 0;
+      color: #38bdf8;
+    }
+    .mobile-gate > p {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      max-width: 320px;
+      line-height: 1.6;
+      margin: 0 auto;
+    }
+    .mobile-gate .preview-card {
+      width: 100%;
+      max-width: 320px;
+    }
+    .mobile-gate .preview-card img {
+      width: 100%;
+      max-width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      display: block;
+    }
+    .mobile-gate .explain {
+      font-size: 0.875rem;
+      color: #64748b;
+      max-width: 320px;
+      line-height: 1.6;
+      margin: 0 auto;
+    }
+    .mobile-gate button {
+      width: 100%;
+      max-width: 320px;
+      min-height: 52px;
+      background: #38bdf8;
+      color: #0f172a;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 0 1.5rem;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+    .mobile-gate button:active {
+      background: #7dd3fc;
+    }
+    @media (max-width: 768px) {
+      .mobile-gate { display: flex; }
+      #audioOverlay { display: none !important; }
+      #appMain { display: none !important; }
+      .bg-shape { display: none !important; }
+    }
+  </style>
 </head>
 <body>
-  <div id="mobile-notice" style="display:none; position:fixed; inset:0; z-index:9999; background:#1a1a2e; color:#e0e0e0; font-family:'Space Grotesk',system-ui,sans-serif; padding:2rem; text-align:center; flex-direction:column; justify-content:center; align-items:center; gap:1.5rem;">
-    <div style="font-size:3rem;">🥁</div>
-    <h1 style="font-size:1.4rem; font-weight:700; margin:0;">Keyboard Drummer Needs a Keyboard</h1>
-    <p style="font-size:0.95rem; color:#999; max-width:320px; line-height:1.5; margin:0 auto;">This rhythm game maps drum sounds to your keyboard keys. You'll need a desktop or laptop to play.</p>
-    <a href="https://pyon.dev" style="color:#4ade80; font-size:0.9rem; text-decoration:none;">← Back to pyon.dev</a>
+  <div class="mobile-gate" id="mobile-notice">
+    <h1>🥁 Keyboard Drummer</h1>
+    <p>Turn your keyboard into a drum kit. Map keys to samples, build patterns, jam freestyle.</p>
+    <div class="preview-card">
+      <img src="og.png" alt="Keyboard Drummer preview" />
+    </div>
+    <p class="explain">This instrument needs a physical keyboard. Open on your laptop or desktop to start drumming.</p>
+    <button onclick="navigator.clipboard.writeText('https://michaelpyon.github.io/keyboard-drummer/').then(() => this.textContent = 'Link copied!')">
+      📋 Copy Link for Desktop
+    </button>
   </div>
   <script>
     if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth < 768) {
@@ -144,6 +222,22 @@
       <p>Use <strong>Jam Mode</strong> to freestyle with no song, and <strong>Start Recording</strong> to capture your hits and add them as a playable chart.</p>
     </details>
   </main>
+
+  <!-- Share modal -->
+  <div id="shareModal" class="share-modal hidden" role="dialog" aria-modal="true" aria-label="Session complete">
+    <div class="share-modal-card">
+      <p class="share-modal-icon">🥁</p>
+      <h2 class="share-modal-title">Session Complete</h2>
+      <div id="shareStats" class="share-stats"></div>
+      <div class="share-modal-actions">
+        <button id="shareXBtn" type="button" class="btn-share-x">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          Share on X
+        </button>
+        <button id="sharePlayAgainBtn" type="button" class="btn-play-again">Play Again</button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
   <script>
