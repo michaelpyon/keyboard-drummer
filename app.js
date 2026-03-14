@@ -168,6 +168,10 @@ const countdownEl = document.getElementById("countdown");
 const gameArea = document.getElementById("gameArea");
 const beatGuideLayer = document.getElementById("beatGuideLayer");
 const flashLayer = document.getElementById("flashLayer");
+const shareModal = document.getElementById("shareModal");
+const shareStatsEl = document.getElementById("shareStats");
+const shareXBtn = document.getElementById("shareXBtn");
+const sharePlayAgainBtn = document.getElementById("sharePlayAgainBtn");
 
 const laneEls = {};
 for (const lane of document.querySelectorAll(".lane")) {
@@ -197,12 +201,20 @@ let beatGuideSchedule = [];
 let nextGuideIndex = 0;
 let activeBeatGuides = [];
 
+// Metronome lookahead scheduler — uses AudioContext.currentTime as master clock
+// instead of RAF frame timing so clicks fire at precise beat boundaries.
+const METRO_LOOKAHEAD_SEC = 0.1;  // schedule this many seconds ahead
+const METRO_INTERVAL_MS  = 25;    // how often the scheduler polls (ms)
+let metronomeSchedulerId  = null;
+let nextMetronomeTime     = 0;
+let metronomeBeatIndex    = 0;
+let metronomeBpm          = 120;
+
 let score = 0;
 let combo = 0;
 let maxCombo = 0;
 let hits = 0;
 let misses = 0;
-let lastClickBeat = -1;
 
 let judgementTimer = null;
 let perfectPulseTimer = null;
@@ -232,6 +244,20 @@ function init() {
   restartBtn.addEventListener("click", () => {
     startSong();
   });
+
+  if (shareXBtn) {
+    shareXBtn.addEventListener("click", () => {
+      const url = "https://twitter.com/intent/tweet?text=I+just+jammed+out+on+Keyboard+Drummer+%F0%9F%A5%81+Try+it+%E2%86%92&url=https%3A%2F%2Fmichaelpyon.github.io%2Fkeyboard-drummer%2F";
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+  }
+
+  if (sharePlayAgainBtn) {
+    sharePlayAgainBtn.addEventListener("click", () => {
+      hideShareModal();
+      startSong();
+    });
+  }
 
   jamBtn.addEventListener("click", () => {
     enterJamMode();
@@ -882,6 +908,25 @@ function checkSongEnd(elapsed) {
   const accuracy = computeAccuracy();
   setStatus(`Finished ${activeSong.title}. Score ${score}, accuracy ${accuracy}%, max combo ${maxCombo}.`);
   updateModeReadout();
+  showShareModal();
+}
+
+function showShareModal() {
+  if (!shareModal || !shareStatsEl) return;
+
+  const accuracy = computeAccuracy();
+  shareStatsEl.innerHTML =
+    `<strong>${activeSong.title}</strong><br>` +
+    `Score: <strong>${score}</strong> &nbsp;|&nbsp; ` +
+    `Max Combo: <strong>${maxCombo}</strong> &nbsp;|&nbsp; ` +
+    `Accuracy: <strong>${accuracy}%</strong>`;
+
+  shareModal.classList.remove("hidden");
+  shareModal.focus();
+}
+
+function hideShareModal() {
+  if (shareModal) shareModal.classList.add("hidden");
 }
 
 function stopLoop() {
