@@ -841,7 +841,7 @@ function registerHit(note, elapsed) {
   }
 
   note.hit = true;
-  removeNoteElement(note);
+  removeNoteElement(note, css);
 
   combo += 1;
   maxCombo = Math.max(maxCombo, combo);
@@ -881,9 +881,18 @@ function registerGhostMiss(lane) {
   updateStats();
 }
 
-function removeNoteElement(note) {
+function removeNoteElement(note, quality) {
   if (note.el && note.el.parentNode) {
-    note.el.parentNode.removeChild(note.el);
+    if (quality && quality !== "miss") {
+      // Burst animation instead of instant removal
+      const el = note.el;
+      el.classList.add("note-hit", `note-hit-${quality}`);
+      el.addEventListener("animationend", () => {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+    } else {
+      note.el.parentNode.removeChild(note.el);
+    }
   }
   note.el = null;
 }
@@ -1379,7 +1388,317 @@ function playNoise(engine, config) {
 }
 
 function buildSongs() {
-  return [buildNeonStarter(), buildMetroFunk(), buildDoubleKickRush()];
+  return [
+    buildNeonStarter(),
+    buildBrooklynSwagger(),
+    buildStadiumStomp(),
+    buildDiscoInferno(),
+    buildMetroFunk(),
+    buildJazzCafe(),
+    buildDoubleKickRush(),
+    buildPunkBlitz()
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Brooklyn Swagger — 87 BPM, 48 beats (12 bars)
+// Classic boom-bap hip-hop: heavy kick on 1 & 3, snare on 2 & 4, 8th-note hats.
+// Ghost snares every 4th bar, crash on bar 1 and every 8 bars.
+// ---------------------------------------------------------------------------
+function buildBrooklynSwagger() {
+  const bpm = 87;
+  const totalBeats = 48;
+  const notes = [];
+
+  for (let bar = 0; bar < totalBeats / 4; bar++) {
+    const base = bar * 4;
+
+    // Crash on bar 0 and every 8 bars (bar 8)
+    if (bar === 0 || bar % 8 === 0) {
+      addBeat(notes, bpm, base, "crash");
+    }
+
+    // 8th-note hi-hats: every 0.5 beats across the bar
+    for (let i = 0; i < 8; i++) {
+      const pos = base + i * 0.5;
+      // Occasional open-hat feel on the "and" of beat 2 (pos base+2.5): use ride
+      if (i === 5) {
+        addBeat(notes, bpm, pos, "ride");
+      } else {
+        addBeat(notes, bpm, pos, "hihat");
+      }
+    }
+
+    // Kick on beat 1 and beat 3
+    addBeat(notes, bpm, base, "bass");
+    addBeat(notes, bpm, base + 2, "bass");
+
+    // Snare on beat 2 and beat 4
+    addBeat(notes, bpm, base + 1, "snare");
+    addBeat(notes, bpm, base + 3, "snare");
+
+    // Ghost snare hits on the "and" of beats 1 and 3 every 4th bar
+    if (bar % 4 === 3) {
+      addBeat(notes, bpm, base + 0.5, "snare");
+      addBeat(notes, bpm, base + 2.5, "snare");
+    }
+
+    // Subtle extra kick on the "and" of beat 3 every 2 bars for laid-back feel
+    if (bar % 2 === 1) {
+      addBeat(notes, bpm, base + 3.5, "bass");
+    }
+  }
+
+  return finalizeSong({
+    id: "brooklyn-swagger",
+    title: "Brooklyn Swagger",
+    bpm,
+    totalBeats,
+    description: "Boom-bap groove with ghost snares. Head nod required.",
+    notes
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Stadium Stomp — 120 BPM, 80 beats (20 bars)
+// Stomp-stomp-clap pattern that builds to a full anthem kit.
+// Phase 1 (bars 0-7): bass-bass-snare only.
+// Phase 2 (bars 8-15): add hi-hats.
+// Phase 3 (bars 16-19): full kit with tom fills every 4 bars.
+// ---------------------------------------------------------------------------
+function buildStadiumStomp() {
+  const bpm = 120;
+  const totalBeats = 80;
+  const notes = [];
+
+  for (let bar = 0; bar < totalBeats / 4; bar++) {
+    const base = bar * 4;
+
+    // Crash on bar 0 and every 8 bars for anthem moments
+    if (bar === 0 || bar % 8 === 0) {
+      addBeat(notes, bpm, base, "crash");
+    }
+
+    // Core stomp-stomp-clap: bass on 1 & 1.5, snare on 2, bass on 3 & 3.5, snare on 4
+    addBeat(notes, bpm, base,       "bass");
+    addBeat(notes, bpm, base + 0.5, "bass");
+    addBeat(notes, bpm, base + 1,   "snare");
+    addBeat(notes, bpm, base + 2,   "bass");
+    addBeat(notes, bpm, base + 2.5, "bass");
+    addBeat(notes, bpm, base + 3,   "snare");
+
+    // Phase 2 (bars 8+): layer in 8th-note hi-hats
+    if (bar >= 8) {
+      for (let i = 0; i < 8; i++) {
+        addBeat(notes, bpm, base + i * 0.5, "hihat");
+      }
+    }
+
+    // Phase 3 (bars 16+): extra snare accent and ride
+    if (bar >= 16) {
+      addBeat(notes, bpm, base + 1.5, "snare");
+      addBeat(notes, bpm, base + 3.5, "ride");
+    }
+
+    // Tom fills every 4 bars starting from bar 4
+    if (bar % 4 === 3 && bar >= 4) {
+      addBeat(notes, bpm, base + 2.5, "hightom");
+      addBeat(notes, bpm, base + 2.75, "hightom");
+      addBeat(notes, bpm, base + 3.25, "lowtom");
+      addBeat(notes, bpm, base + 3.5,  "lowtom");
+    }
+  }
+
+  return finalizeSong({
+    id: "stadium-stomp",
+    title: "Stadium Stomp",
+    bpm,
+    totalBeats,
+    description: "Builds from stomp-clap to full kit anthem. Play it loud.",
+    notes
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Disco Inferno — 110 BPM, 64 beats (16 bars)
+// Four-on-the-floor: bass every quarter, ride on upbeats, snare on 2 & 4.
+// Second half adds 16th-note hi-hat runs. Tom fills every 8 bars.
+// ---------------------------------------------------------------------------
+function buildDiscoInferno() {
+  const bpm = 110;
+  const totalBeats = 64;
+  const notes = [];
+
+  for (let bar = 0; bar < totalBeats / 4; bar++) {
+    const base = bar * 4;
+    const inSecondHalf = bar >= totalBeats / 8; // bar 8 onward
+
+    // Crash on bar 0 and bar 8
+    if (bar === 0 || bar === 8) {
+      addBeat(notes, bpm, base, "crash");
+    }
+
+    // Four-on-the-floor bass drum
+    for (let beat = 0; beat < 4; beat++) {
+      addBeat(notes, bpm, base + beat, "bass");
+    }
+
+    // Ride (open hi-hat feel) on every upbeat
+    for (let i = 0; i < 4; i++) {
+      addBeat(notes, bpm, base + i + 0.5, "ride");
+    }
+
+    // Snare on 2 and 4
+    addBeat(notes, bpm, base + 1, "snare");
+    addBeat(notes, bpm, base + 3, "snare");
+
+    // Second half: 16th-note hi-hat runs (every 0.25 beats)
+    if (inSecondHalf) {
+      for (let i = 0; i < 16; i++) {
+        addBeat(notes, bpm, base + i * 0.25, "hihat");
+      }
+    }
+
+    // Tom fills every 8 bars
+    if (bar % 8 === 7) {
+      addBeat(notes, bpm, base + 3,    "hightom");
+      addBeat(notes, bpm, base + 3.25, "hightom");
+      addBeat(notes, bpm, base + 3.5,  "lowtom");
+      addBeat(notes, bpm, base + 3.75, "lowtom");
+    }
+  }
+
+  return finalizeSong({
+    id: "disco-inferno",
+    title: "Disco Inferno",
+    bpm,
+    totalBeats,
+    description: "Four-on-the-floor with 16th-note hi-hat runs. Stay on the beat.",
+    notes
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Jazz Cafe — 95 BPM, 48 beats (12 bars)
+// Swing ride pattern (dotted-8th + 16th approximated as beat + beat+0.67).
+// Hi-hat foot on 2 & 4, snare cross-stick on beat 4, bass lightly on 1 & 3.
+// Sparse, tasteful. Ghost snare notes for brush feel.
+// ---------------------------------------------------------------------------
+function buildJazzCafe() {
+  const bpm = 95;
+  const totalBeats = 48;
+  const notes = [];
+
+  for (let bar = 0; bar < totalBeats / 4; bar++) {
+    const base = bar * 4;
+
+    // Swing ride pattern: downbeat + triplet "let" of each beat
+    // Approximated as beat + (beat + 0.67) for each of the 4 beats
+    for (let beat = 0; beat < 4; beat++) {
+      addBeat(notes, bpm, base + beat,        "ride");
+      addBeat(notes, bpm, base + beat + 0.67, "ride");
+    }
+
+    // Bass drum lightly on 1 and 3
+    addBeat(notes, bpm, base,     "bass");
+    addBeat(notes, bpm, base + 2, "bass");
+
+    // Hi-hat foot splash on 2 and 4 (use hihat for the foot)
+    addBeat(notes, bpm, base + 1, "hihat");
+    addBeat(notes, bpm, base + 3, "hihat");
+
+    // Snare cross-stick on beat 4 of most bars
+    if (bar % 4 !== 3) {
+      addBeat(notes, bpm, base + 3, "snare");
+    }
+
+    // Ghost notes (brush feel): snare at the "and" of beat 2 every other bar
+    if (bar % 2 === 0) {
+      addBeat(notes, bpm, base + 1.5, "snare");
+    }
+
+    // Occasional snare accent on "and" of beat 4 for call-response feel
+    if (bar % 4 === 1 || bar % 4 === 3) {
+      addBeat(notes, bpm, base + 3.5, "snare");
+    }
+
+    // Every 4 bars, add a bass drum walk-up for interest
+    if (bar % 4 === 3) {
+      addBeat(notes, bpm, base + 2.5, "bass");
+    }
+  }
+
+  return finalizeSong({
+    id: "jazz-cafe",
+    title: "Jazz Cafe",
+    bpm,
+    totalBeats,
+    description: "Swing ride, ghost notes, and taste. Less is more.",
+    notes
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Punk Blitz — 175 BPM, 96 beats (24 bars)
+// Driving 8th-note hi-hats, snare on 2 & 4, bass on 1 & 3.
+// Double-kick 16ths before phrase transitions. Crash every 4 bars.
+// Tom rolls at end of every 8-bar phrase.
+// ---------------------------------------------------------------------------
+function buildPunkBlitz() {
+  const bpm = 175;
+  const totalBeats = 96;
+  const notes = [];
+
+  for (let bar = 0; bar < totalBeats / 4; bar++) {
+    const base = bar * 4;
+
+    // Crash every 4 bars
+    if (bar % 4 === 0) {
+      addBeat(notes, bpm, base, "crash");
+    }
+
+    // Driving 8th-note hi-hats
+    for (let i = 0; i < 8; i++) {
+      addBeat(notes, bpm, base + i * 0.5, "hihat");
+    }
+
+    // Snare on 2 and 4
+    addBeat(notes, bpm, base + 1, "snare");
+    addBeat(notes, bpm, base + 3, "snare");
+
+    // Bass on 1 and 3
+    addBeat(notes, bpm, base,     "bass");
+    addBeat(notes, bpm, base + 2, "bass");
+
+    // Double-kick 16ths before every 4-bar transition (bar 3, 7, 11, etc.)
+    if (bar % 4 === 3) {
+      addBeat(notes, bpm, base + 3.5,  "bass");
+      addBeat(notes, bpm, base + 3.75, "bass");
+    }
+
+    // Tom rolls at end of every 8-bar phrase (bars 7, 15, 23)
+    if (bar % 8 === 7) {
+      // Replace last beat's hi-hats and add rapid tom roll
+      addBeat(notes, bpm, base + 3,    "hightom");
+      addBeat(notes, bpm, base + 3.25, "hightom");
+      addBeat(notes, bpm, base + 3.5,  "lowtom");
+      addBeat(notes, bpm, base + 3.75, "lowtom");
+    }
+
+    // Extra snare punch mid-bar every 2 bars for raw energy
+    if (bar % 2 === 1) {
+      addBeat(notes, bpm, base + 1.5, "snare");
+    }
+  }
+
+  return finalizeSong({
+    id: "punk-blitz",
+    title: "Punk Blitz",
+    bpm,
+    totalBeats,
+    description: "175 BPM. No mercy. Fast hi-hats and double kicks.",
+    notes
+  });
 }
 
 function buildNeonStarter() {
