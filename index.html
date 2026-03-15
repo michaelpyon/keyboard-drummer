@@ -3,22 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keyboard Drummer — Play Drums With Your Keyboard</title>
+  <meta name="description" content="Turn your keyboard into a drum kit. Map keys to samples, build patterns, and record your session. No installs needed." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://michaelpyon.github.io/keyboard-drummer/" />
-  <meta property="og:title" content="Keyboard Drummer — Turn Your Keyboard Into a Drum Kit" />
-  <meta property="og:description" content="Pick a song. Hit the keys on beat. A browser-based rhythm game for your keyboard." />
+  <meta property="og:title" content="Keyboard Drummer — Play Drums With Your Keyboard" />
+  <meta property="og:description" content="Turn your keyboard into a drum kit. Map keys to samples, build patterns, and record your session." />
   <meta property="og:image" content="https://michaelpyon.github.io/keyboard-drummer/og.png" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Keyboard Drummer — Turn Your Keyboard Into a Drum Kit" />
-  <meta name="twitter:description" content="Pick a song. Hit the keys on beat. A browser-based rhythm game for your keyboard." />
+  <meta name="twitter:title" content="Keyboard Drummer" />
+  <meta name="twitter:description" content="Turn your keyboard into a drum kit. Map keys to samples, build patterns, and record your session." />
   <meta name="twitter:image" content="https://michaelpyon.github.io/keyboard-drummer/og.png" />
   <meta name="twitter:site" content="@michaelpyon" />
   <meta name="twitter:creator" content="@michaelpyon" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥁</text></svg>">
-  <title>Keyboard Drummer</title>
+  <link rel="canonical" href="https://michaelpyon.github.io/keyboard-drummer/" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <style>
     .mobile-gate {
@@ -116,6 +118,7 @@
   <div class="bg-shape shape-a" aria-hidden="true"></div>
   <div class="bg-shape shape-b" aria-hidden="true"></div>
 
+<<<<<<< HEAD
   <!-- Audio unlock overlay — required by browser autoplay policy -->
   <div id="audioOverlay" class="audio-overlay" role="dialog" aria-modal="true" aria-label="Start game">
     <div class="audio-overlay-card">
@@ -127,6 +130,17 @@
   </div>
 
   <main class="app" id="appMain" style="display:none">
+=======
+  <div class="audio-overlay" id="audioOverlay">
+    <div class="audio-overlay-prompt">
+      <span class="audio-overlay-icon" aria-hidden="true">🥁</span>
+      <p class="audio-overlay-title">Click anywhere to enable audio</p>
+      <p class="audio-overlay-sub">Your browser requires a gesture before sound can play.</p>
+    </div>
+  </div>
+
+  <main class="app">
+>>>>>>> d31550b (Add OG/Twitter meta tags, favicon, OG image, and semi-transparent audio overlay)
     <header class="hero reveal-1">
       <p class="eyebrow">Arcade Drum Rhythm</p>
       <h2>Keyboard Drummer</h2>

@@ -304,18 +304,44 @@ function init() {
 }
 
 function bindAudioUnlock() {
+  const overlay = document.getElementById("audioOverlay");
+
   const unlock = () => {
     ensureAudioRunning();
     if (audioReady) {
       window.removeEventListener("pointerdown", unlock);
       window.removeEventListener("touchstart", unlock);
       window.removeEventListener("keydown", unlock);
+      dismissAudioOverlay(overlay);
     }
   };
+
+  const dismissAndUnlock = () => {
+    ensureAudioRunning();
+    dismissAudioOverlay(overlay);
+    window.removeEventListener("pointerdown", unlock);
+    window.removeEventListener("touchstart", unlock);
+    window.removeEventListener("keydown", unlock);
+  };
+
+  if (overlay) {
+    overlay.addEventListener("click", dismissAndUnlock);
+  }
 
   window.addEventListener("pointerdown", unlock);
   window.addEventListener("touchstart", unlock, { passive: true });
   window.addEventListener("keydown", unlock);
+}
+
+function dismissAudioOverlay(overlay) {
+  if (!overlay || overlay.classList.contains("dismissed")) {
+    return;
+  }
+
+  overlay.classList.add("dismissed");
+  overlay.addEventListener("transitionend", () => {
+    overlay.remove();
+  }, { once: true });
 }
 
 function populateSongSelect() {

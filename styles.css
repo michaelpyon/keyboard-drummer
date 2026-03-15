@@ -20,6 +20,9 @@
   --lane-ride: #8b9cff;
   --lane-crash: #ff5f73;
   --hit-line-offset: 86px;
+  --font-display: 'Bungee', 'Trebuchet MS', sans-serif;
+  --font-body: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
 * {
@@ -193,6 +196,8 @@ select:focus-visible {
 }
 
 .stat strong {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 1.38rem;
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
@@ -860,6 +865,54 @@ select:focus-visible {
     font-size: clamp(0.68rem, 1.6vw, 0.92rem);
     padding: 0.18rem 0.28rem;
   }
+}
+
+.audio-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(9, 19, 28, 0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 360ms ease;
+}
+
+.audio-overlay.dismissed {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.audio-overlay-prompt {
+  text-align: center;
+  padding: 2rem 2.5rem;
+  border-radius: 20px;
+  background: rgba(8, 21, 32, 0.85);
+  border: 1px solid rgba(169, 206, 224, 0.3);
+  box-shadow: 0 16px 48px rgba(2, 10, 18, 0.5);
+  max-width: 380px;
+}
+
+.audio-overlay-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 0.6rem;
+}
+
+.audio-overlay-title {
+  margin: 0 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--text-main);
+  letter-spacing: 0.03em;
+}
+
+.audio-overlay-sub {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-soft);
 }
 
 @keyframes reveal {
