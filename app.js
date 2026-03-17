@@ -950,12 +950,28 @@ function showShareModal() {
     `Max Combo: <strong>${maxCombo}</strong> &nbsp;|&nbsp; ` +
     `Accuracy: <strong>${accuracy}%</strong>`;
 
-  shareModal.classList.remove("hidden");
-  shareModal.focus();
+  shareModal.classList.add("visible");
+  // Focus trap: focus first button, trap Tab, close on Escape
+  const firstBtn = shareModal.querySelector("button");
+  if (firstBtn) firstBtn.focus();
+  shareModal._trapHandler = function (e) {
+    if (e.key === "Escape") { hideShareModal(); return; }
+    if (e.key !== "Tab") return;
+    const btns = shareModal.querySelectorAll("button");
+    const first = btns[0], last = btns[btns.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  };
+  shareModal.addEventListener("keydown", shareModal._trapHandler);
 }
 
 function hideShareModal() {
-  if (shareModal) shareModal.classList.add("hidden");
+  if (!shareModal) return;
+  shareModal.classList.remove("visible");
+  if (shareModal._trapHandler) {
+    shareModal.removeEventListener("keydown", shareModal._trapHandler);
+    shareModal._trapHandler = null;
+  }
 }
 
 function stopLoop() {
@@ -1167,7 +1183,7 @@ function pressLane(lane) {
 
   laneReleaseTimers[lane] = setTimeout(() => {
     laneEl.classList.remove("pressed");
-  }, 90);
+  }, 120);
 }
 
 function clearNotes() {

@@ -16,6 +16,7 @@
   <meta name="twitter:image" content="https://michaelpyon.github.io/keyboard-drummer/og.png" />
   <meta name="twitter:site" content="@michaelpyon" />
   <meta name="twitter:creator" content="@michaelpyon" />
+  <meta name="theme-color" content="#09131c">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥁</text></svg>">
   <link rel="canonical" href="https://michaelpyon.github.io/keyboard-drummer/" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -88,7 +89,7 @@
     .mobile-gate button:active {
       background: #7dd3fc;
     }
-    @media (max-width: 768px) {
+    @media (max-width: 768px), ((hover: none) and (pointer: coarse)) {
       .mobile-gate { display: flex; }
       #audioOverlay { display: none !important; }
       #appMain { display: none !important; }
@@ -108,42 +109,24 @@
       📋 Copy Link for Desktop
     </button>
   </div>
-  <script>
-    if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) || window.innerWidth < 768) {
-      document.getElementById('mobile-notice').style.display = 'flex';
-      document.getElementById('audioOverlay').style.display = 'none';
-      document.getElementById('appMain').style.display = 'none';
-    }
-  </script>
+  <a href="#gameArea" class="skip-nav">Skip to game</a>
   <div class="bg-shape shape-a" aria-hidden="true"></div>
   <div class="bg-shape shape-b" aria-hidden="true"></div>
 
-<<<<<<< HEAD
   <!-- Audio unlock overlay — required by browser autoplay policy -->
   <div id="audioOverlay" class="audio-overlay" role="dialog" aria-modal="true" aria-label="Start game">
     <div class="audio-overlay-card">
       <p class="audio-overlay-icon">🥁</p>
-      <h1>Keyboard Drummer</h1>
+      <h2>Keyboard Drummer</h2>
       <p>Tap anywhere to enable audio and start playing.</p>
       <button id="audioStartBtn" type="button">Start Drumming</button>
     </div>
   </div>
 
   <main class="app" id="appMain" style="display:none">
-=======
-  <div class="audio-overlay" id="audioOverlay">
-    <div class="audio-overlay-prompt">
-      <span class="audio-overlay-icon" aria-hidden="true">🥁</span>
-      <p class="audio-overlay-title">Click anywhere to enable audio</p>
-      <p class="audio-overlay-sub">Your browser requires a gesture before sound can play.</p>
-    </div>
-  </div>
-
-  <main class="app">
->>>>>>> d31550b (Add OG/Twitter meta tags, favicon, OG image, and semi-transparent audio overlay)
     <header class="hero reveal-1">
       <p class="eyebrow">Arcade Drum Rhythm</p>
-      <h2>Keyboard Drummer</h2>
+      <h1>Keyboard Drummer</h1>
       <p class="subtitle">Play with keyboard drums, jam any time, and record your own takes.</p>
     </header>
 
@@ -230,7 +213,7 @@
 
     <details class="panel help reveal-6">
       <summary>How To Play</summary>
-      <h2>How To Play</h2>
+      <h3>How To Play</h3>
       <p>Hit the mapped key when a falling note touches the line. Timing tiers are <strong>Perfect</strong>, <strong>Good</strong>, and <strong>Ok</strong>.</p>
       <p>Lefty mode uses your requested layout: D hi-hat, G/H snare, E/R low tom, T/Y high tom, 3/4 ride, 5/6 crash, and Space for bass.</p>
       <p>Use <strong>Jam Mode</strong> to freestyle with no song, and <strong>Start Recording</strong> to capture your hits and add them as a playable chart.</p>
@@ -238,7 +221,7 @@
   </main>
 
   <!-- Share modal -->
-  <div id="shareModal" class="share-modal hidden" role="dialog" aria-modal="true" aria-label="Session complete">
+  <div id="shareModal" class="share-modal" role="dialog" aria-modal="true" aria-label="Session complete">
     <div class="share-modal-card">
       <p class="share-modal-icon">🥁</p>
       <h2 class="share-modal-title">Session Complete</h2>
@@ -267,8 +250,9 @@
           var ctx = new Ctx();
           ctx.resume().then(function () { ctx.close(); });
         }
-        overlay.style.display = 'none';
+        overlay.classList.add('hiding');
         appMain.style.display = '';
+        setTimeout(function () { overlay.style.display = 'none'; }, 250);
         // Focus game area so keyboard events register immediately
         var ga = document.getElementById('gameArea');
         if (ga) { ga.focus({ preventScroll: true }); }
