@@ -698,7 +698,7 @@ select:focus-visible {
 
 .judgement {
   font-family: var(--font-display);
-  top: 16%;
+  bottom: calc(var(--hit-line-offset) + 28px);
   min-width: 10ch;
   font-size: clamp(1.45rem, 3vw, 2.5rem);
   text-align: center;

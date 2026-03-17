@@ -147,6 +147,7 @@ const PERFECT_WINDOW = 0.05;
 const MISS_WINDOW = 0.2;
 const LEAD_IN = 1.9;
 const HIT_LINE_OFFSET = 86;
+const NOTE_HEIGHT = 18;
 
 const songSelect = document.getElementById("songSelect");
 const handMode = document.getElementById("handMode");
@@ -761,7 +762,10 @@ function spawnNotes(elapsed) {
 }
 
 function positionNotes(elapsed) {
-  const hitLineY = gameArea.clientHeight - HIT_LINE_OFFSET;
+  // Notes (18px tall) need to land ON the outline (bottom: 86px, also 18px tall).
+  // Without the offset, note.top lands at the outline's bottom edge at progress=1,
+  // making "perfect" visually appear 18px too late. Subtracting NOTE_HEIGHT aligns them.
+  const hitLineY = gameArea.clientHeight - HIT_LINE_OFFSET - NOTE_HEIGHT;
   const keep = [];
 
   for (const note of activeNotes) {
