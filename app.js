@@ -1085,10 +1085,12 @@ function spawnParticles(lane, quality) {
   const centerX = laneIdx === undefined ? 50 : ((laneIdx + 0.5) / LANE_META.length) * 100;
   const hitY = gameArea.clientHeight - HIT_LINE_OFFSET;
   const count = quality === "perfect" ? 8 : 4;
+  // Derive particle palettes from CSS tokens so they stay in sync with the theme
+  const rs = getComputedStyle(document.documentElement);
   const colors = {
-    perfect: ["#57f6ca", "#48ffd9", "#87ffdb"],
-    good: ["#7fdaff", "#60c8ff", "#a0e0ff"],
-    ok: ["#ffd77f", "#ffcf49", "#ffe680"]
+    perfect: [rs.getPropertyValue("--accent-1").trim(), "#48ffd9", "#87ffdb"],
+    good: [rs.getPropertyValue("--accent-3").trim(), "#60c8ff", "#a0e0ff"],
+    ok: [rs.getPropertyValue("--accent-2").trim(), rs.getPropertyValue("--lane-bass").trim(), "#ffe680"]
   };
   const palette = colors[quality] || colors.ok;
 
