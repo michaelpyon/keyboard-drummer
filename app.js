@@ -174,17 +174,51 @@ const shareStatsEl = document.getElementById("shareStats");
 const shareXBtn = document.getElementById("shareXBtn");
 const sharePlayAgainBtn = document.getElementById("sharePlayAgainBtn");
 
+// Song library elements
+const songLibrary = document.getElementById("songLibrary");
+const gameScreen = document.getElementById("gameScreen");
+const songGrid = document.getElementById("songGrid");
+const genreTabs = document.getElementById("genreTabs");
+const diffSortBtn = document.getElementById("diffSortBtn");
+const jamModeLibBtn = document.getElementById("jamModeLibBtn");
+const backToLibBtn = document.getElementById("backToLibBtn");
+
+// Progress bar elements
+const songProgressBar = document.getElementById("songProgressBar");
+const songProgressFill = document.getElementById("songProgressFill");
+const songProgressLabel = document.getElementById("songProgressLabel");
+
+// Results modal elements
+const resultsModal = document.getElementById("resultsModal");
+const resultsTitle = document.getElementById("resultsTitle");
+const resultsSummary = document.getElementById("resultsSummary");
+const resultsLanes = document.getElementById("resultsLanes");
+const resultsRetryBtn = document.getElementById("resultsRetryBtn");
+const resultsLibraryBtn = document.getElementById("resultsLibraryBtn");
+const resultsShareBtn = document.getElementById("resultsShareBtn");
+
 const laneEls = {};
 for (const lane of document.querySelectorAll(".lane")) {
   laneEls[lane.dataset.lane] = lane;
 }
 
-const songs = buildSongs();
+const songs = buildSongLibrary();
 
 let activeSong = songs[0];
 let activeMapping = KEYMAPS.righty;
 let activeKitId = "studio";
 let keyToLane = new Map();
+
+// Song library state
+let libraryGenreFilter = "all";
+let librarySortMode = "default"; // "default", "asc", "desc"
+
+// Per-lane hit tracking for results screen
+let laneHits = {};
+let laneMisses = {};
+let perfectCount = 0;
+let goodCount = 0;
+let okCount = 0;
 
 let isRunning = false;
 let jamModeActive = true;
@@ -237,6 +271,8 @@ function init() {
   updateModeReadout();
   refreshRecordButton();
   bindAudioUnlock();
+  renderSongLibrary();
+  bindLibraryEvents();
 
   startBtn.addEventListener("click", () => {
     startSong();
@@ -293,6 +329,32 @@ function init() {
     }
   });
 
+  if (backToLibBtn) {
+    backToLibBtn.addEventListener("click", () => {
+      showLibrary();
+    });
+  }
+
+  // Results modal buttons
+  if (resultsRetryBtn) {
+    resultsRetryBtn.addEventListener("click", () => {
+      hideResultsModal();
+      startSong();
+    });
+  }
+  if (resultsLibraryBtn) {
+    resultsLibraryBtn.addEventListener("click", () => {
+      hideResultsModal();
+      showLibrary();
+    });
+  }
+  if (resultsShareBtn) {
+    resultsShareBtn.addEventListener("click", () => {
+      const url = "https://twitter.com/intent/tweet?text=I+just+jammed+out+on+Keyboard+Drummer+%F0%9F%A5%81+Try+it+%E2%86%92&url=https%3A%2F%2Fmichaelpyon.github.io%2Fkeyboard-drummer%2F";
+      window.open(url, "_blank", "noopener,noreferrer");
+    });
+  }
+
   window.addEventListener("keydown", onKeyDown, { capture: true });
   gameArea.addEventListener("pointerdown", focusGameArea);
   document.addEventListener("visibilitychange", () => {
@@ -300,8 +362,6 @@ function init() {
       focusGameArea();
     }
   });
-
-  focusGameArea();
 }
 
 function bindAudioUnlock() {
@@ -464,6 +524,7 @@ function enterJamMode() {
   clearNotes();
   isRunning = false;
   jamModeActive = true;
+  hideSongProgress();
   setStatus("Jam mode active. Play freely; drums are always live.");
   updateModeReadout();
   focusGameArea();
@@ -631,6 +692,7 @@ function gameLoop(now) {
   positionBeatGuides(elapsed);
   spawnNotes(elapsed);
   positionNotes(elapsed);
+  updateSongProgress(elapsed);
   checkSongEnd(elapsed);
 
   rafId = requestAnimationFrame(gameLoop);
@@ -864,10 +926,14 @@ function registerHit(note, elapsed) {
     points = 300;
     text = "Perfect";
     css = "perfect";
+    perfectCount += 1;
   } else if (error <= GOOD_WINDOW) {
     points = 180;
     text = "Good";
     css = "good";
+    goodCount += 1;
+  } else {
+    okCount += 1;
   }
 
   note.hit = true;
@@ -877,6 +943,11 @@ function registerHit(note, elapsed) {
   maxCombo = Math.max(maxCombo, combo);
   hits += 1;
   score += points + combo * 3;
+
+  // Track per-lane hits
+  if (laneHits[note.lane] !== undefined) {
+    laneHits[note.lane] += 1;
+  }
 
   showJudgement(text, css);
   triggerHitFx(note.lane, css);
@@ -894,6 +965,11 @@ function registerMiss(note) {
 
   combo = 0;
   misses += 1;
+
+  // Track per-lane misses
+  if (note && laneMisses[note.lane] !== undefined) {
+    laneMisses[note.lane] += 1;
+  }
 
   showJudgement("Miss", "miss");
   if (note) {
@@ -937,11 +1013,12 @@ function checkSongEnd(elapsed) {
 
   isRunning = false;
   stopLoop();
+  hideSongProgress();
 
   const accuracy = computeAccuracy();
   setStatus(`Finished ${activeSong.title}. Score ${score}, accuracy ${accuracy}%, max combo ${maxCombo}.`);
   updateModeReadout();
-  showShareModal();
+  showResultsModal();
 }
 
 function showShareModal() {
@@ -1000,6 +1077,15 @@ function resetScoreboard() {
   maxCombo = 0;
   hits = 0;
   misses = 0;
+  perfectCount = 0;
+  goodCount = 0;
+  okCount = 0;
+  laneHits = {};
+  laneMisses = {};
+  for (const lane of LANE_META) {
+    laneHits[lane.id] = 0;
+    laneMisses[lane.id] = 0;
+  }
   updateStats();
 }
 
@@ -1085,10 +1171,12 @@ function spawnParticles(lane, quality) {
   const centerX = laneIdx === undefined ? 50 : ((laneIdx + 0.5) / LANE_META.length) * 100;
   const hitY = gameArea.clientHeight - HIT_LINE_OFFSET;
   const count = quality === "perfect" ? 8 : 4;
+  // Derive particle palettes from CSS tokens so they stay in sync with the theme
+  const rs = getComputedStyle(document.documentElement);
   const colors = {
-    perfect: ["#57f6ca", "#48ffd9", "#87ffdb"],
-    good: ["#7fdaff", "#60c8ff", "#a0e0ff"],
-    ok: ["#ffd77f", "#ffcf49", "#ffe680"]
+    perfect: [rs.getPropertyValue("--accent-1").trim(), "#48ffd9", "#87ffdb"],
+    good: [rs.getPropertyValue("--accent-3").trim(), "#60c8ff", "#a0e0ff"],
+    ok: [rs.getPropertyValue("--accent-2").trim(), rs.getPropertyValue("--lane-bass").trim(), "#ffe680"]
   };
   const palette = colors[quality] || colors.ok;
 
@@ -1471,457 +1559,258 @@ function playNoise(engine, config) {
   src.stop(now + config.duration + 0.03);
 }
 
-function buildSongs() {
-  return [
-    buildNeonStarter(),
-    buildBrooklynSwagger(),
-    buildStadiumStomp(),
-    buildDiscoInferno(),
-    buildMetroFunk(),
-    buildJazzCafe(),
-    buildDoubleKickRush(),
-    buildPunkBlitz()
-  ];
+// ---------------------------------------------------------------------------
+// Song Library UI
+// ---------------------------------------------------------------------------
+
+function renderSongLibrary() {
+  if (!songGrid) return;
+  songGrid.innerHTML = "";
+
+  let filtered = songs.filter(s => s.genre); // only library songs (not recorded)
+  if (libraryGenreFilter !== "all") {
+    filtered = filtered.filter(s => s.genre === libraryGenreFilter);
+  }
+
+  if (librarySortMode === "asc") {
+    filtered.sort((a, b) => (a.difficulty || 0) - (b.difficulty || 0));
+  } else if (librarySortMode === "desc") {
+    filtered.sort((a, b) => (b.difficulty || 0) - (a.difficulty || 0));
+  }
+
+  for (const song of filtered) {
+    const card = document.createElement("button");
+    card.className = "song-card";
+    card.type = "button";
+    card.dataset.songId = song.id;
+
+    const genreColor = (SONG_LIBRARY_META && SONG_LIBRARY_META.genreColors && SONG_LIBRARY_META.genreColors[song.genre]) || "var(--accent-3)";
+
+    const stars = renderDifficultyStars(song.difficulty || 1);
+    const durationSec = Math.round((song.duration || 60) - LEAD_IN - 2.4);
+
+    card.innerHTML =
+      `<span class="song-card-genre" style="background:${genreColor}">${song.genre || "Other"}</span>` +
+      `<span class="song-card-title">${song.title}</span>` +
+      `<span class="song-card-meta">${song.bpm} BPM &middot; ${durationSec}s</span>` +
+      `<span class="song-card-diff">${stars}</span>` +
+      `<span class="song-card-desc">${song.description || ""}</span>`;
+
+    card.addEventListener("click", () => {
+      selectSongFromLibrary(song.id);
+    });
+
+    songGrid.appendChild(card);
+  }
+
+  // Add recorded songs at the end
+  const recorded = songs.filter(s => !s.genre);
+  for (const song of recorded) {
+    const card = document.createElement("button");
+    card.className = "song-card song-card-recorded";
+    card.type = "button";
+    card.dataset.songId = song.id;
+
+    card.innerHTML =
+      `<span class="song-card-genre" style="background:var(--accent-2)">Recorded</span>` +
+      `<span class="song-card-title">${song.title}</span>` +
+      `<span class="song-card-meta">${song.bpm} BPM</span>` +
+      `<span class="song-card-desc">${song.description || ""}</span>`;
+
+    card.addEventListener("click", () => {
+      selectSongFromLibrary(song.id);
+    });
+
+    songGrid.appendChild(card);
+  }
 }
 
-// ---------------------------------------------------------------------------
-// Brooklyn Swagger — 87 BPM, 48 beats (12 bars)
-// Classic boom-bap hip-hop: heavy kick on 1 & 3, snare on 2 & 4, 8th-note hats.
-// Ghost snares every 4th bar, crash on bar 1 and every 8 bars.
-// ---------------------------------------------------------------------------
-function buildBrooklynSwagger() {
-  const bpm = 87;
-  const totalBeats = 48;
-  const notes = [];
+function renderDifficultyStars(difficulty) {
+  let html = "";
+  for (let i = 1; i <= 5; i++) {
+    html += i <= difficulty
+      ? '<span class="star filled">&#9733;</span>'
+      : '<span class="star empty">&#9734;</span>';
+  }
+  return html;
+}
 
-  for (let bar = 0; bar < totalBeats / 4; bar++) {
-    const base = bar * 4;
+function bindLibraryEvents() {
+  if (genreTabs) {
+    genreTabs.addEventListener("click", (e) => {
+      const tab = e.target.closest(".genre-tab");
+      if (!tab) return;
+      libraryGenreFilter = tab.dataset.genre;
+      for (const t of genreTabs.querySelectorAll(".genre-tab")) {
+        t.classList.toggle("active", t === tab);
+      }
+      renderSongLibrary();
+    });
+  }
 
-    // Crash on bar 0 and every 8 bars (bar 8)
-    if (bar === 0 || bar % 8 === 0) {
-      addBeat(notes, bpm, base, "crash");
-    }
-
-    // 8th-note hi-hats: every 0.5 beats across the bar
-    for (let i = 0; i < 8; i++) {
-      const pos = base + i * 0.5;
-      // Occasional open-hat feel on the "and" of beat 2 (pos base+2.5): use ride
-      if (i === 5) {
-        addBeat(notes, bpm, pos, "ride");
+  if (diffSortBtn) {
+    diffSortBtn.addEventListener("click", () => {
+      if (librarySortMode === "default") {
+        librarySortMode = "asc";
+        diffSortBtn.textContent = "Sort: Easy First";
+      } else if (librarySortMode === "asc") {
+        librarySortMode = "desc";
+        diffSortBtn.textContent = "Sort: Hard First";
       } else {
-        addBeat(notes, bpm, pos, "hihat");
+        librarySortMode = "default";
+        diffSortBtn.textContent = "Sort: Default";
       }
-    }
-
-    // Kick on beat 1 and beat 3
-    addBeat(notes, bpm, base, "bass");
-    addBeat(notes, bpm, base + 2, "bass");
-
-    // Snare on beat 2 and beat 4
-    addBeat(notes, bpm, base + 1, "snare");
-    addBeat(notes, bpm, base + 3, "snare");
-
-    // Ghost snare hits on the "and" of beats 1 and 3 every 4th bar
-    if (bar % 4 === 3) {
-      addBeat(notes, bpm, base + 0.5, "snare");
-      addBeat(notes, bpm, base + 2.5, "snare");
-    }
-
-    // Subtle extra kick on the "and" of beat 3 every 2 bars for laid-back feel
-    if (bar % 2 === 1) {
-      addBeat(notes, bpm, base + 3.5, "bass");
-    }
+      renderSongLibrary();
+    });
   }
 
-  return finalizeSong({
-    id: "brooklyn-swagger",
-    title: "Brooklyn Swagger",
-    bpm,
-    totalBeats,
-    description: "Boom-bap groove with ghost snares. Head nod required.",
-    notes
-  });
+  if (jamModeLibBtn) {
+    jamModeLibBtn.addEventListener("click", () => {
+      showGameScreen();
+      enterJamMode();
+    });
+  }
+}
+
+function selectSongFromLibrary(songId) {
+  const selected = songs.find(s => s.id === songId);
+  if (!selected) return;
+  activeSong = selected;
+  songSelect.value = songId;
+  showGameScreen();
+  startSong();
+}
+
+function showLibrary() {
+  stopLoop();
+  clearNotes();
+  isRunning = false;
+  jamModeActive = false;
+  updateModeReadout();
+  hideSongProgress();
+  renderSongLibrary();
+
+  if (songLibrary) songLibrary.style.display = "";
+  if (gameScreen) gameScreen.style.display = "none";
+}
+
+function showGameScreen() {
+  if (songLibrary) songLibrary.style.display = "none";
+  if (gameScreen) gameScreen.style.display = "";
+  focusGameArea();
 }
 
 // ---------------------------------------------------------------------------
-// Stadium Stomp — 120 BPM, 80 beats (20 bars)
-// Stomp-stomp-clap pattern that builds to a full anthem kit.
-// Phase 1 (bars 0-7): bass-bass-snare only.
-// Phase 2 (bars 8-15): add hi-hats.
-// Phase 3 (bars 16-19): full kit with tom fills every 4 bars.
+// Song Progress Bar
 // ---------------------------------------------------------------------------
-function buildStadiumStomp() {
-  const bpm = 120;
-  const totalBeats = 80;
-  const notes = [];
 
-  for (let bar = 0; bar < totalBeats / 4; bar++) {
-    const base = bar * 4;
-
-    // Crash on bar 0 and every 8 bars for anthem moments
-    if (bar === 0 || bar % 8 === 0) {
-      addBeat(notes, bpm, base, "crash");
-    }
-
-    // Core stomp-stomp-clap: bass on 1 & 1.5, snare on 2, bass on 3 & 3.5, snare on 4
-    addBeat(notes, bpm, base,       "bass");
-    addBeat(notes, bpm, base + 0.5, "bass");
-    addBeat(notes, bpm, base + 1,   "snare");
-    addBeat(notes, bpm, base + 2,   "bass");
-    addBeat(notes, bpm, base + 2.5, "bass");
-    addBeat(notes, bpm, base + 3,   "snare");
-
-    // Phase 2 (bars 8+): layer in 8th-note hi-hats
-    if (bar >= 8) {
-      for (let i = 0; i < 8; i++) {
-        addBeat(notes, bpm, base + i * 0.5, "hihat");
-      }
-    }
-
-    // Phase 3 (bars 16+): extra snare accent and ride
-    if (bar >= 16) {
-      addBeat(notes, bpm, base + 1.5, "snare");
-      addBeat(notes, bpm, base + 3.5, "ride");
-    }
-
-    // Tom fills every 4 bars starting from bar 4
-    if (bar % 4 === 3 && bar >= 4) {
-      addBeat(notes, bpm, base + 2.5, "hightom");
-      addBeat(notes, bpm, base + 2.75, "hightom");
-      addBeat(notes, bpm, base + 3.25, "lowtom");
-      addBeat(notes, bpm, base + 3.5,  "lowtom");
-    }
+function updateSongProgress(elapsed) {
+  if (!songProgressBar || !songProgressFill || !songProgressLabel) return;
+  if (!activeSong || jamModeActive) {
+    hideSongProgress();
+    return;
   }
 
-  return finalizeSong({
-    id: "stadium-stomp",
-    title: "Stadium Stomp",
-    bpm,
-    totalBeats,
-    description: "Builds from stomp-clap to full kit anthem. Play it loud.",
-    notes
-  });
+  songProgressBar.style.display = "";
+  const totalDuration = activeSong.duration - LEAD_IN - 2.4;
+  const songElapsed = Math.max(0, elapsed - LEAD_IN);
+  const progress = Math.min(1, songElapsed / totalDuration);
+
+  songProgressFill.style.width = (progress * 100) + "%";
+
+  const remainSec = Math.max(0, Math.round(totalDuration - songElapsed));
+  songProgressLabel.textContent = activeSong.title + " \u2014 " + remainSec + "s";
+}
+
+function hideSongProgress() {
+  if (songProgressBar) songProgressBar.style.display = "none";
+  if (songProgressFill) songProgressFill.style.width = "0%";
+  if (songProgressLabel) songProgressLabel.textContent = "";
 }
 
 // ---------------------------------------------------------------------------
-// Disco Inferno — 110 BPM, 64 beats (16 bars)
-// Four-on-the-floor: bass every quarter, ride on upbeats, snare on 2 & 4.
-// Second half adds 16th-note hi-hat runs. Tom fills every 8 bars.
+// Results Modal (per-lane stats, accuracy breakdown)
 // ---------------------------------------------------------------------------
-function buildDiscoInferno() {
-  const bpm = 110;
-  const totalBeats = 64;
-  const notes = [];
 
-  for (let bar = 0; bar < totalBeats / 4; bar++) {
-    const base = bar * 4;
-    const inSecondHalf = bar >= totalBeats / 8; // bar 8 onward
+function showResultsModal() {
+  if (!resultsModal) return;
 
-    // Crash on bar 0 and bar 8
-    if (bar === 0 || bar === 8) {
-      addBeat(notes, bpm, base, "crash");
-    }
+  const accuracy = computeAccuracy();
+  const totalNotes = hits + misses;
 
-    // Four-on-the-floor bass drum
-    for (let beat = 0; beat < 4; beat++) {
-      addBeat(notes, bpm, base + beat, "bass");
-    }
+  // Grade
+  let grade = "F";
+  if (accuracy >= 98) grade = "S";
+  else if (accuracy >= 90) grade = "A";
+  else if (accuracy >= 80) grade = "B";
+  else if (accuracy >= 70) grade = "C";
+  else if (accuracy >= 60) grade = "D";
 
-    // Ride (open hi-hat feel) on every upbeat
-    for (let i = 0; i < 4; i++) {
-      addBeat(notes, bpm, base + i + 0.5, "ride");
-    }
-
-    // Snare on 2 and 4
-    addBeat(notes, bpm, base + 1, "snare");
-    addBeat(notes, bpm, base + 3, "snare");
-
-    // Second half: 16th-note hi-hat runs (every 0.25 beats)
-    if (inSecondHalf) {
-      for (let i = 0; i < 16; i++) {
-        addBeat(notes, bpm, base + i * 0.25, "hihat");
-      }
-    }
-
-    // Tom fills every 8 bars
-    if (bar % 8 === 7) {
-      addBeat(notes, bpm, base + 3,    "hightom");
-      addBeat(notes, bpm, base + 3.25, "hightom");
-      addBeat(notes, bpm, base + 3.5,  "lowtom");
-      addBeat(notes, bpm, base + 3.75, "lowtom");
-    }
+  if (resultsTitle) {
+    resultsTitle.textContent = activeSong.title + " Complete";
   }
 
-  return finalizeSong({
-    id: "disco-inferno",
-    title: "Disco Inferno",
-    bpm,
-    totalBeats,
-    description: "Four-on-the-floor with 16th-note hi-hat runs. Stay on the beat.",
-    notes
-  });
+  if (resultsSummary) {
+    resultsSummary.innerHTML =
+      `<div class="results-grade grade-${grade.toLowerCase()}">${grade}</div>` +
+      `<div class="results-stats-grid">` +
+        `<div class="results-stat"><span>Score</span><strong>${score}</strong></div>` +
+        `<div class="results-stat"><span>Accuracy</span><strong>${accuracy}%</strong></div>` +
+        `<div class="results-stat"><span>Max Combo</span><strong>${maxCombo}</strong></div>` +
+        `<div class="results-stat"><span>Perfect</span><strong>${perfectCount}</strong></div>` +
+        `<div class="results-stat"><span>Good</span><strong>${goodCount}</strong></div>` +
+        `<div class="results-stat"><span>Ok</span><strong>${okCount}</strong></div>` +
+        `<div class="results-stat"><span>Misses</span><strong>${misses}</strong></div>` +
+        `<div class="results-stat"><span>Total Notes</span><strong>${totalNotes}</strong></div>` +
+      `</div>`;
+  }
+
+  if (resultsLanes) {
+    let lanesHtml = '<div class="results-lane-grid">';
+    for (const lane of LANE_META) {
+      const h = laneHits[lane.id] || 0;
+      const m = laneMisses[lane.id] || 0;
+      const total = h + m;
+      const pct = total > 0 ? Math.round((h / total) * 100) : 100;
+      lanesHtml +=
+        `<div class="results-lane-item">` +
+          `<span class="results-lane-name">${lane.label}</span>` +
+          `<div class="results-lane-bar"><div class="results-lane-fill" style="width:${pct}%;background:var(--lane-${lane.id})"></div></div>` +
+          `<span class="results-lane-pct">${pct}%</span>` +
+        `</div>`;
+    }
+    lanesHtml += '</div>';
+    resultsLanes.innerHTML = lanesHtml;
+  }
+
+  resultsModal.classList.add("visible");
+
+  // Focus trap
+  const firstBtn = resultsModal.querySelector("button");
+  if (firstBtn) firstBtn.focus();
+  resultsModal._trapHandler = function (e) {
+    if (e.key === "Escape") { hideResultsModal(); showLibrary(); return; }
+    if (e.key !== "Tab") return;
+    const btns = resultsModal.querySelectorAll("button");
+    const first = btns[0], last = btns[btns.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  };
+  resultsModal.addEventListener("keydown", resultsModal._trapHandler);
 }
 
-// ---------------------------------------------------------------------------
-// Jazz Cafe — 95 BPM, 48 beats (12 bars)
-// Swing ride pattern (dotted-8th + 16th approximated as beat + beat+0.67).
-// Hi-hat foot on 2 & 4, snare cross-stick on beat 4, bass lightly on 1 & 3.
-// Sparse, tasteful. Ghost snare notes for brush feel.
-// ---------------------------------------------------------------------------
-function buildJazzCafe() {
-  const bpm = 95;
-  const totalBeats = 48;
-  const notes = [];
-
-  for (let bar = 0; bar < totalBeats / 4; bar++) {
-    const base = bar * 4;
-
-    // Swing ride pattern: downbeat + triplet "let" of each beat
-    // Approximated as beat + (beat + 0.67) for each of the 4 beats
-    for (let beat = 0; beat < 4; beat++) {
-      addBeat(notes, bpm, base + beat,        "ride");
-      addBeat(notes, bpm, base + beat + 0.67, "ride");
-    }
-
-    // Bass drum lightly on 1 and 3
-    addBeat(notes, bpm, base,     "bass");
-    addBeat(notes, bpm, base + 2, "bass");
-
-    // Hi-hat foot splash on 2 and 4 (use hihat for the foot)
-    addBeat(notes, bpm, base + 1, "hihat");
-    addBeat(notes, bpm, base + 3, "hihat");
-
-    // Snare cross-stick on beat 4 of most bars
-    if (bar % 4 !== 3) {
-      addBeat(notes, bpm, base + 3, "snare");
-    }
-
-    // Ghost notes (brush feel): snare at the "and" of beat 2 every other bar
-    if (bar % 2 === 0) {
-      addBeat(notes, bpm, base + 1.5, "snare");
-    }
-
-    // Occasional snare accent on "and" of beat 4 for call-response feel
-    if (bar % 4 === 1 || bar % 4 === 3) {
-      addBeat(notes, bpm, base + 3.5, "snare");
-    }
-
-    // Every 4 bars, add a bass drum walk-up for interest
-    if (bar % 4 === 3) {
-      addBeat(notes, bpm, base + 2.5, "bass");
-    }
+function hideResultsModal() {
+  if (!resultsModal) return;
+  resultsModal.classList.remove("visible");
+  if (resultsModal._trapHandler) {
+    resultsModal.removeEventListener("keydown", resultsModal._trapHandler);
+    resultsModal._trapHandler = null;
   }
-
-  return finalizeSong({
-    id: "jazz-cafe",
-    title: "Jazz Cafe",
-    bpm,
-    totalBeats,
-    description: "Swing ride, ghost notes, and taste. Less is more.",
-    notes
-  });
 }
 
 // ---------------------------------------------------------------------------
-// Punk Blitz — 175 BPM, 96 beats (24 bars)
-// Driving 8th-note hi-hats, snare on 2 & 4, bass on 1 & 3.
-// Double-kick 16ths before phrase transitions. Crash every 4 bars.
-// Tom rolls at end of every 8-bar phrase.
+// Song utility functions (used by songs.js)
 // ---------------------------------------------------------------------------
-function buildPunkBlitz() {
-  const bpm = 175;
-  const totalBeats = 96;
-  const notes = [];
-
-  for (let bar = 0; bar < totalBeats / 4; bar++) {
-    const base = bar * 4;
-
-    // Crash every 4 bars
-    if (bar % 4 === 0) {
-      addBeat(notes, bpm, base, "crash");
-    }
-
-    // Driving 8th-note hi-hats
-    for (let i = 0; i < 8; i++) {
-      addBeat(notes, bpm, base + i * 0.5, "hihat");
-    }
-
-    // Snare on 2 and 4
-    addBeat(notes, bpm, base + 1, "snare");
-    addBeat(notes, bpm, base + 3, "snare");
-
-    // Bass on 1 and 3
-    addBeat(notes, bpm, base,     "bass");
-    addBeat(notes, bpm, base + 2, "bass");
-
-    // Double-kick 16ths before every 4-bar transition (bar 3, 7, 11, etc.)
-    if (bar % 4 === 3) {
-      addBeat(notes, bpm, base + 3.5,  "bass");
-      addBeat(notes, bpm, base + 3.75, "bass");
-    }
-
-    // Tom rolls at end of every 8-bar phrase (bars 7, 15, 23)
-    if (bar % 8 === 7) {
-      // Replace last beat's hi-hats and add rapid tom roll
-      addBeat(notes, bpm, base + 3,    "hightom");
-      addBeat(notes, bpm, base + 3.25, "hightom");
-      addBeat(notes, bpm, base + 3.5,  "lowtom");
-      addBeat(notes, bpm, base + 3.75, "lowtom");
-    }
-
-    // Extra snare punch mid-bar every 2 bars for raw energy
-    if (bar % 2 === 1) {
-      addBeat(notes, bpm, base + 1.5, "snare");
-    }
-  }
-
-  return finalizeSong({
-    id: "punk-blitz",
-    title: "Punk Blitz",
-    bpm,
-    totalBeats,
-    description: "175 BPM. No mercy. Fast hi-hats and double kicks.",
-    notes
-  });
-}
-
-function buildNeonStarter() {
-  const bpm = 100;
-  const totalBeats = 64;
-  const notes = [];
-
-  for (let beat = 0; beat < totalBeats; beat += 0.5) {
-    const lane = beat < totalBeats / 2 ? "hihat" : Math.floor(beat * 2) % 2 === 0 ? "ride" : "hihat";
-    addBeat(notes, bpm, beat, lane);
-  }
-
-  for (let bar = 0; bar < totalBeats / 4; bar += 1) {
-    const base = bar * 4;
-
-    addBeat(notes, bpm, base, "bass");
-    addBeat(notes, bpm, base + 1, "snare");
-    addBeat(notes, bpm, base + 2, "bass");
-    addBeat(notes, bpm, base + 3, "snare");
-
-    if (bar % 2 === 1) {
-      addBeat(notes, bpm, base + 2.5, "bass");
-    }
-
-    if (bar % 4 === 3) {
-      addBeat(notes, bpm, base + 3.25, "hightom");
-      addBeat(notes, bpm, base + 3.5, "lowtom");
-    }
-
-    if (bar % 8 === 0) {
-      addBeat(notes, bpm, base, "crash");
-    }
-  }
-
-  return finalizeSong({
-    id: "neon-starter",
-    title: "Neon Starter",
-    bpm,
-    totalBeats,
-    description: "Steady groove with simple fills. Great warm-up chart.",
-    notes
-  });
-}
-
-function buildMetroFunk() {
-  const bpm = 118;
-  const totalBeats = 64;
-  const notes = [];
-
-  for (let beat = 0; beat < totalBeats; beat += 0.5) {
-    const slot = Math.floor((beat * 2) % 8);
-    if (slot === 5 || (beat > totalBeats / 2 && slot === 1)) {
-      addBeat(notes, bpm, beat, "ride");
-    } else {
-      addBeat(notes, bpm, beat, "hihat");
-    }
-  }
-
-  for (let bar = 0; bar < totalBeats / 4; bar += 1) {
-    const base = bar * 4;
-
-    addBeat(notes, bpm, base + 1, "snare");
-    addBeat(notes, bpm, base + 3, "snare");
-
-    for (const hit of [0, 0.75, 2, 2.75]) {
-      addBeat(notes, bpm, base + hit, "bass");
-    }
-
-    if (bar % 2 === 0) {
-      addBeat(notes, bpm, base + 3.5, "snare");
-    }
-
-    if (bar % 4 === 3) {
-      const fill = ["lowtom", "hightom", "lowtom", "hightom", "lowtom"];
-      for (let i = 0; i < fill.length; i += 1) {
-        addBeat(notes, bpm, base + 2.5 + i * 0.25, fill[i]);
-      }
-    }
-
-    if (bar % 8 === 0) {
-      addBeat(notes, bpm, base, "crash");
-    }
-  }
-
-  return finalizeSong({
-    id: "metro-funk",
-    title: "Metro Funk",
-    bpm,
-    totalBeats,
-    description: "Syncopated kick pattern with tom accents and ride transfers.",
-    notes
-  });
-}
-
-function buildDoubleKickRush() {
-  const bpm = 145;
-  const totalBeats = 80;
-  const notes = [];
-
-  for (let beat = 0; beat < totalBeats; beat += 0.5) {
-    const lane = Math.floor(beat) % 4 < 2 ? "hihat" : "ride";
-    addBeat(notes, bpm, beat, lane);
-  }
-
-  for (let bar = 0; bar < totalBeats / 4; bar += 1) {
-    const base = bar * 4;
-
-    addBeat(notes, bpm, base + 1, "snare");
-    addBeat(notes, bpm, base + 3, "snare");
-
-    for (const kickHit of [0, 0.25, 0.75, 2, 2.25, 2.75]) {
-      addBeat(notes, bpm, base + kickHit, "bass");
-    }
-
-    if (bar % 2 === 0) {
-      addBeat(notes, bpm, base + 3.5, "bass");
-    }
-
-    if (bar % 4 === 0) {
-      addBeat(notes, bpm, base, "crash");
-    }
-
-    if (bar % 8 === 7) {
-      const fillPattern = ["hightom", "lowtom", "hightom", "lowtom"];
-      for (let i = 0; i < fillPattern.length; i += 1) {
-        addBeat(notes, bpm, base + 3 + i * 0.25, fillPattern[i]);
-      }
-    }
-  }
-
-  return finalizeSong({
-    id: "double-kick-rush",
-    title: "Double Kick Rush",
-    bpm,
-    totalBeats,
-    description: "Fast chart focused on bass bursts, ride flow, and tom runs.",
-    notes
-  });
-}
 
 function addBeat(notes, bpm, beat, lane) {
   notes.push({

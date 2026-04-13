@@ -29,8 +29,8 @@
       position: fixed;
       inset: 0;
       z-index: 9999;
-      background: #0f172a;
-      color: #e0e0e0;
+      background: var(--bg-0, #09131c);
+      color: var(--text-main, #f3f8fb);
       font-family: 'Space Grotesk', system-ui, sans-serif;
       padding: 2rem;
       text-align: center;
@@ -44,11 +44,11 @@
       font-size: 1.8rem;
       font-weight: 700;
       margin: 0;
-      color: #38bdf8;
+      color: var(--accent-3, #72d8ff);
     }
     .mobile-gate > p {
       font-size: 0.95rem;
-      color: #94a3b8;
+      color: var(--text-soft, #c4dae8);
       max-width: 320px;
       line-height: 1.6;
       margin: 0 auto;
@@ -61,12 +61,13 @@
       width: 100%;
       max-width: 100%;
       border-radius: 12px;
-      border: 1px solid rgba(56, 189, 248, 0.3);
+      border: 1px solid rgba(114, 216, 255, 0.3);
       display: block;
     }
     .mobile-gate .explain {
       font-size: 0.875rem;
-      color: #64748b;
+      color: var(--text-soft, #c4dae8);
+      opacity: 0.6;
       max-width: 320px;
       line-height: 1.6;
       margin: 0 auto;
@@ -75,8 +76,8 @@
       width: 100%;
       max-width: 320px;
       min-height: 52px;
-      background: #38bdf8;
-      color: #0f172a;
+      background: var(--accent-3, #72d8ff);
+      color: var(--bg-0, #09131c);
       border: none;
       border-radius: 10px;
       font-size: 1rem;
@@ -87,7 +88,7 @@
       transition: background 0.2s;
     }
     .mobile-gate button:active {
-      background: #7dd3fc;
+      background: var(--accent-1, #20d9b5);
     }
     @media (max-width: 768px), ((hover: none) and (pointer: coarse)) {
       .mobile-gate { display: flex; }
@@ -124,13 +125,43 @@
   </div>
 
   <main class="app" id="appMain" style="display:none">
-    <header class="hero reveal-1">
+    <!-- Song Library Screen -->
+    <section id="songLibrary" class="song-library">
+      <header class="hero reveal-1">
+        <p class="eyebrow">Arcade Drum Rhythm</p>
+        <h1>Keyboard Drummer</h1>
+        <p class="subtitle">Pick a song, or jam freestyle. 20 patterns across 6 genres.</p>
+      </header>
+
+      <div class="library-toolbar reveal-2">
+        <div class="genre-tabs" id="genreTabs">
+          <button class="genre-tab active" data-genre="all">All</button>
+          <button class="genre-tab" data-genre="Rock">Rock</button>
+          <button class="genre-tab" data-genre="Jazz">Jazz</button>
+          <button class="genre-tab" data-genre="Hip-Hop">Hip-Hop</button>
+          <button class="genre-tab" data-genre="Electronic">Electronic</button>
+          <button class="genre-tab" data-genre="Latin">Latin</button>
+          <button class="genre-tab" data-genre="Funk">Funk</button>
+          <button class="genre-tab" data-genre="Metal">Metal</button>
+        </div>
+        <div class="library-controls">
+          <button id="diffSortBtn" class="diff-sort-btn" type="button">Sort: Default</button>
+          <button id="jamModeLibBtn" class="jam-mode-lib-btn" type="button">Jam Mode</button>
+        </div>
+      </div>
+
+      <div class="song-grid reveal-3" id="songGrid"></div>
+    </section>
+
+    <!-- Game Screen (hidden until song selected) -->
+    <section id="gameScreen" class="game-screen" style="display:none">
+    <header class="hero">
       <p class="eyebrow">Arcade Drum Rhythm</p>
       <h1>Keyboard Drummer</h1>
       <p class="subtitle">Play with keyboard drums, jam any time, and record your own takes.</p>
     </header>
 
-    <section class="panel controls reveal-2" aria-label="Game controls">
+    <section class="panel controls" aria-label="Game controls">
       <label>
         Song
         <select id="songSelect" aria-label="Select song"></select>
@@ -153,9 +184,15 @@
       <button id="restartBtn" type="button">Restart</button>
       <button id="jamBtn" type="button">Jam Mode</button>
       <button id="recordBtn" type="button" aria-pressed="false">Start Recording</button>
+      <button id="backToLibBtn" type="button">Back to Library</button>
     </section>
 
-    <section class="game-shell reveal-3" aria-label="Drum lanes">
+    <div class="song-progress-bar" id="songProgressBar">
+      <div class="song-progress-fill" id="songProgressFill"></div>
+      <span class="song-progress-label" id="songProgressLabel"></span>
+    </div>
+
+    <section class="game-shell" aria-label="Drum lanes">
       <div class="game-area" id="gameArea">
         <div class="countdown" id="countdown"></div>
         <div class="judgement" id="judgement"></div>
@@ -211,14 +248,33 @@
       <div id="keyMapGrid" class="key-map-grid"></div>
     </details>
 
-    <details class="panel help reveal-6">
+    <details class="panel help">
       <summary>How To Play</summary>
       <h3>How To Play</h3>
       <p>Hit the mapped key when a falling note touches the line. Timing tiers are <strong>Perfect</strong>, <strong>Good</strong>, and <strong>Ok</strong>.</p>
       <p>Lefty mode uses your requested layout: D hi-hat, G/H snare, E/R low tom, T/Y high tom, 3/4 ride, 5/6 crash, and Space for bass.</p>
       <p>Use <strong>Jam Mode</strong> to freestyle with no song, and <strong>Start Recording</strong> to capture your hits and add them as a playable chart.</p>
     </details>
+    </section><!-- /gameScreen -->
   </main>
+
+  <!-- Results modal (replaces old share modal for song completion) -->
+  <div id="resultsModal" class="results-modal" role="dialog" aria-modal="true" aria-label="Song results">
+    <div class="results-modal-card">
+      <p class="results-modal-icon">🥁</p>
+      <h2 class="results-modal-title" id="resultsTitle">Song Complete</h2>
+      <div class="results-summary" id="resultsSummary"></div>
+      <div class="results-lanes" id="resultsLanes"></div>
+      <div class="results-modal-actions">
+        <button id="resultsRetryBtn" type="button" class="btn-play-again">Retry</button>
+        <button id="resultsLibraryBtn" type="button" class="btn-back-library">Back to Library</button>
+        <button id="resultsShareBtn" type="button" class="btn-share-x">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          Share on X
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Share modal -->
   <div id="shareModal" class="share-modal" role="dialog" aria-modal="true" aria-label="Session complete">
@@ -236,6 +292,7 @@
     </div>
   </div>
 
+  <script src="songs.js"></script>
   <script src="app.js"></script>
   <script>
     (function () {
