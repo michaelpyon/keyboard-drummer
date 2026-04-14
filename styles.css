@@ -1614,3 +1614,23 @@ select:focus-visible {
   .note-hit { animation-duration: 0.01ms; }
   .beat-guide, .beat-guide.beat, .beat-guide.bar { opacity: 0.5; }
 }
+
+/* ── Focus-visible for library toolbar controls ─────────────── */
+.genre-tab:focus-visible,
+.diff-sort-btn:focus-visible,
+.jam-mode-lib-btn:focus-visible {
+  outline: 3px solid rgba(114, 216, 255, 0.95);
+  outline-offset: 2px;
+}
+
+.song-card:focus-visible {
+  outline: 3px solid rgba(114, 216, 255, 0.95);
+  outline-offset: 2px;
+}
+
+.btn-share-x:focus-visible,
+.btn-play-again:focus-visible,
+.btn-back-library:focus-visible {
+  outline: 3px solid rgba(114, 216, 255, 0.95);
+  outline-offset: 2px;
+}
