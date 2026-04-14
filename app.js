@@ -1583,6 +1583,7 @@ function renderSongLibrary() {
     card.className = "song-card";
     card.type = "button";
     card.dataset.songId = song.id;
+    card.setAttribute("aria-label", song.title + " (" + (song.genre || "Recorded") + ", " + song.bpm + " BPM)");
 
     const genreColor = (SONG_LIBRARY_META && SONG_LIBRARY_META.genreColors && SONG_LIBRARY_META.genreColors[song.genre]) || "var(--accent-3)";
 
@@ -1610,6 +1611,7 @@ function renderSongLibrary() {
     card.className = "song-card song-card-recorded";
     card.type = "button";
     card.dataset.songId = song.id;
+    card.setAttribute("aria-label", song.title + " (" + (song.genre || "Recorded") + ", " + song.bpm + " BPM)");
 
     card.innerHTML =
       `<span class="song-card-genre" style="background:var(--accent-2)">Recorded</span>` +
