@@ -1174,9 +1174,9 @@ function spawnParticles(lane, quality) {
   // Derive particle palettes from CSS tokens so they stay in sync with the theme
   const rs = getComputedStyle(document.documentElement);
   const colors = {
-    perfect: [rs.getPropertyValue("--accent-1").trim(), "#48ffd9", "#87ffdb"],
-    good: [rs.getPropertyValue("--accent-3").trim(), "#60c8ff", "#a0e0ff"],
-    ok: [rs.getPropertyValue("--accent-2").trim(), rs.getPropertyValue("--lane-bass").trim(), "#ffe680"]
+    perfect: [rs.getPropertyValue("--accent-1").trim(), rs.getPropertyValue("--particle-perfect-a").trim(), rs.getPropertyValue("--particle-perfect-b").trim()],
+    good: [rs.getPropertyValue("--accent-3").trim(), rs.getPropertyValue("--particle-good-a").trim(), rs.getPropertyValue("--particle-good-b").trim()],
+    ok: [rs.getPropertyValue("--accent-2").trim(), rs.getPropertyValue("--lane-bass").trim(), rs.getPropertyValue("--particle-ok").trim()]
   };
   const palette = colors[quality] || colors.ok;
 

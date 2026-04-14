@@ -20,6 +20,13 @@
   --lane-ride: #8b9cff;
   --lane-crash: #ff5f73;
   --hit-line-offset: 86px;
+
+  /* Feedback particle accents (lighter tints of the core palette) */
+  --particle-perfect-a: #48ffd9;
+  --particle-perfect-b: #87ffdb;
+  --particle-good-a: #60c8ff;
+  --particle-good-b: #a0e0ff;
+  --particle-ok: #ffe680;
 }
 
 * {
