@@ -10,19 +10,23 @@ const SONG_LIBRARY_META = {
   genres: ["Rock", "Jazz", "Hip-Hop", "Electronic", "Latin", "Funk", "Metal"],
   // Genre colors resolve from CSS custom properties so they stay in sync with
   // the design tokens defined in styles.css (:root).
-  genreColors: (() => {
-    const rs = getComputedStyle(document.documentElement);
-    const v = (prop) => rs.getPropertyValue(prop).trim();
-    return {
-      "Rock": v("--lane-crash"),
-      "Jazz": v("--lane-ride"),
-      "Hip-Hop": v("--lane-bass"),
-      "Electronic": v("--accent-3"),
-      "Latin": v("--accent-1"),
-      "Funk": v("--accent-2"),
-      "Metal": v("--lane-crash")
-    };
-  })()
+  _genreColorsCache: null,
+  get genreColors() {
+    if (!this._genreColorsCache) {
+      const rs = getComputedStyle(document.documentElement);
+      const v = (prop) => rs.getPropertyValue(prop).trim();
+      this._genreColorsCache = {
+        "Rock": v("--lane-crash"),
+        "Jazz": v("--lane-ride"),
+        "Hip-Hop": v("--lane-bass"),
+        "Electronic": v("--accent-3"),
+        "Latin": v("--accent-1"),
+        "Funk": v("--accent-2"),
+        "Metal": v("--lane-crash")
+      };
+    }
+    return this._genreColorsCache;
+  }
 };
 
 function buildSongLibrary() {

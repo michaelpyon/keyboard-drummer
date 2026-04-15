@@ -301,12 +301,6 @@
       var btn = document.getElementById('audioStartBtn');
 
       function unlock() {
-        // Create and resume AudioContext synchronously during user gesture
-        var Ctx = window.AudioContext || window.webkitAudioContext;
-        if (Ctx) {
-          var ctx = new Ctx();
-          ctx.resume().then(function () { ctx.close(); });
-        }
         overlay.classList.add('hiding');
         appMain.style.display = '';
         setTimeout(function () { overlay.style.display = 'none'; }, 250);
