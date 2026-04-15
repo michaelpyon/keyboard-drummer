@@ -236,7 +236,7 @@ let beatGuideSchedule = [];
 let nextGuideIndex = 0;
 let activeBeatGuides = [];
 
-// Metronome lookahead scheduler — uses AudioContext.currentTime as master clock
+// Metronome lookahead scheduler: uses AudioContext.currentTime as master clock
 // instead of RAF frame timing so clicks fire at precise beat boundaries.
 const METRO_LOOKAHEAD_SEC = 0.1;  // schedule this many seconds ahead
 const METRO_INTERVAL_MS  = 25;    // how often the scheduler polls (ms)
