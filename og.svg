@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#09131c"/>
+  <rect x="0" y="0" width="1200" height="6" fill="#20d9b5"/>
+  <g transform="translate(80, 430)">
+    <rect width="150" height="150" rx="16" fill="#12283a" stroke="#20d9b5" stroke-width="3"/>
+    <text x="75" y="98" font-family="'JetBrains Mono', monospace" font-size="56" font-weight="700" fill="#20d9b5" text-anchor="middle">D</text>
+    <rect x="180" width="150" height="150" rx="16" fill="#12283a" stroke="#ff9e3d" stroke-width="3"/>
+    <text x="255" y="98" font-family="'JetBrains Mono', monospace" font-size="56" font-weight="700" fill="#ff9e3d" text-anchor="middle">F</text>
+    <rect x="360" width="150" height="150" rx="16" fill="#12283a" stroke="#72d8ff" stroke-width="3"/>
+    <text x="435" y="98" font-family="'JetBrains Mono', monospace" font-size="56" font-weight="700" fill="#72d8ff" text-anchor="middle">J</text>
+    <rect x="540" width="150" height="150" rx="16" fill="#12283a" stroke="#ff5f73" stroke-width="3"/>
+    <text x="615" y="98" font-family="'JetBrains Mono', monospace" font-size="56" font-weight="700" fill="#ff5f73" text-anchor="middle">K</text>
+  </g>
+  <text x="80" y="250" font-family="system-ui, -apple-system, sans-serif" font-size="88" font-weight="700" fill="#f3f8fb" letter-spacing="-2">Keyboard Drummer</text>
+  <text x="82" y="320" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="400" fill="#c4dae8">Turn your keyboard into a drum kit</text>
+  <rect x="84" y="352" width="70" height="3" fill="#20d9b5" rx="1.5"/>
+  <text x="1120" y="586" text-anchor="end" font-family="system-ui, -apple-system, sans-serif" font-size="20" font-weight="500" fill="#5e7488" letter-spacing="1">michaelpyon.com</text>
+</svg>
