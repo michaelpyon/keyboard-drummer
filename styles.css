@@ -263,6 +263,59 @@ select:focus-visible {
   text-shadow: 0 0 18px rgba(255, 95, 115, 0.45);
 }
 
+/* Always-visible key reference strip above the drum lanes */
+.keyref-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--panel);
+  border: none;
+  border-radius: 14px;
+  backdrop-filter: blur(7px);
+  box-shadow: 0px 0px 0px 1px rgba(169, 206, 224, 0.18), 0 6px 18px rgba(2, 10, 18, 0.28);
+}
+
+.keyref-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+
+.keyref-item + .keyref-item::before {
+  content: "";
+  display: block;
+  width: 1px;
+  height: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  margin-right: 0.05rem;
+}
+
+.keyref-pad {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  color: var(--text-soft);
+  opacity: 0.75;
+}
+
+.keyref-key {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(6, 16, 25, 0.88);
+  border: 1.5px solid rgba(255, 255, 255, 0.38);
+  border-radius: 6px;
+  padding: 0.1rem 0.42rem;
+  letter-spacing: 0.03em;
+  line-height: 1.5;
+}
+
 .keymap {
   padding: 0.55rem 0.8rem;
 }

@@ -164,6 +164,7 @@ const maxComboValue = document.getElementById("maxComboValue");
 const accuracyValue = document.getElementById("accuracyValue");
 const streakReadout = document.getElementById("streakReadout");
 const keyMapGrid = document.getElementById("keyMapGrid");
+const keyrefStrip = document.getElementById("keyrefStrip");
 const judgementEl = document.getElementById("judgement");
 const countdownEl = document.getElementById("countdown");
 const gameArea = document.getElementById("gameArea");
@@ -455,9 +456,32 @@ function applyHandMode(mode) {
   }
 
   renderKeyTiles();
+  renderKeyrefStrip();
 
   if (!isRunning && !isRecording) {
     setStatus(`${activeSong.title}: ${activeSong.description} | ${mode === "lefty" ? "Lefty" : "Righty"} mode | Kit: ${getActiveKit().label}`);
+  }
+}
+
+function renderKeyrefStrip() {
+  if (!keyrefStrip) return;
+  keyrefStrip.innerHTML = "";
+
+  for (const lane of LANE_META) {
+    const keys = activeMapping[lane.id] || [];
+    const item = document.createElement("div");
+    item.className = "keyref-item";
+
+    const padLabel = document.createElement("span");
+    padLabel.className = "keyref-pad";
+    padLabel.textContent = lane.label;
+
+    const keyLabel = document.createElement("span");
+    keyLabel.className = "keyref-key";
+    keyLabel.textContent = formatLaneKeys(keys);
+
+    item.append(padLabel, keyLabel);
+    keyrefStrip.appendChild(item);
   }
 }
 
