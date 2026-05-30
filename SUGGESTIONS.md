@@ -39,11 +39,11 @@ The live URL at `https://keyboard-drummer.vercel.app` serves an older build. It 
 
 1. **Fix share tweet URL** (DONE this pass): Both "Share on X" buttons now link to the correct Vercel host. Cost: 2-line fix. Impact: every share tweet from the app now points to the real live URL.
 
-2. **Add score/grade to tweet text**: The current tweet text is generic ("I just jammed out on Keyboard Drummer"). A small improvement: include the grade letter and accuracy in the tweet body (e.g. "S rank, 98% accuracy") so shared tweets have a concrete hook. Effort S. File: `app.js` in the two `resultsShareBtn` / `shareXBtn` handlers.
+2. **Add score/grade to tweet text** (DONE wave 2): `resultsShareBtn` now generates a dynamic tweet including grade letter, accuracy %, and song title (e.g. "S rank, 98% accuracy on 'Rock Beat 1' in Keyboard Drummer! Can you beat it?"). File: `app.js`.
 
-3. **Jam Mode share text is wrong**: The jam mode share (session complete modal) always says "jammed out" with no stats. After a recording session, the share could say how many hits were recorded over how many seconds. Effort S. File: `app.js`, `showShareModal()`.
+3. **Jam Mode share text is wrong**: The jam mode share (session complete modal) always says "jammed out" with no stats. After a recording session, the share could say how many hits were recorded over how many seconds. Effort S. File: `app.js`, `showShareModal()`. Note: `showShareModal()` is defined but never called in current flow; the "Session Complete" modal is orphaned from jam mode.
 
-4. **Song count in subtitle is wrong**: `index.html` line 133 says "20 patterns across 6 genres" but `SONG_LIBRARY_META.genres` lists 7 genres (Rock, Jazz, Hip-Hop, Electronic, Latin, Funk, Metal). Change to "7 genres". Effort XS. File: `index.html`.
+4. **Song count in subtitle is wrong** (DONE wave 2): Fixed "6 genres" to "7 genres" in `index.html` subtitle. File: `index.html`.
 
 5. **No `package.json` / no build step**: this is static HTML. The deploy pipeline needs a push-to-Vercel trigger to flush HEAD. Flag as deploy-mismatch.
 

@@ -351,7 +351,17 @@ function init() {
   }
   if (resultsShareBtn) {
     resultsShareBtn.addEventListener("click", () => {
-      const url = "https://twitter.com/intent/tweet?text=I+just+jammed+out+on+Keyboard+Drummer+%F0%9F%A5%81+Try+it+%E2%86%92&url=https%3A%2F%2Fkeyboard-drummer.vercel.app%2F";
+      const acc = computeAccuracy();
+      let grade = "F";
+      if (acc >= 98) grade = "S";
+      else if (acc >= 90) grade = "A";
+      else if (acc >= 80) grade = "B";
+      else if (acc >= 70) grade = "C";
+      else if (acc >= 60) grade = "D";
+      const songTitle = activeSong ? activeSong.title : "Keyboard Drummer";
+      const tweetText = `${grade} rank, ${acc}% accuracy on "${songTitle}" in Keyboard Drummer! Can you beat it?`;
+      const tweetUrl = "https://keyboard-drummer.vercel.app/";
+      const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(tweetUrl)}`;
       window.open(url, "_blank", "noopener,noreferrer");
     });
   }
