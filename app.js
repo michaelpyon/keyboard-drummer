@@ -285,7 +285,7 @@ function init() {
 
   if (shareXBtn) {
     shareXBtn.addEventListener("click", () => {
-      const url = "https://twitter.com/intent/tweet?text=I+just+jammed+out+on+Keyboard+Drummer+%F0%9F%A5%81+Try+it+%E2%86%92&url=https%3A%2F%2Fmichaelpyon.github.io%2Fkeyboard-drummer%2F";
+      const url = "https://twitter.com/intent/tweet?text=I+just+jammed+out+on+Keyboard+Drummer+%F0%9F%A5%81+Try+it+%E2%86%92&url=https%3A%2F%2Fkeyboard-drummer.vercel.app%2F";
       window.open(url, "_blank", "noopener,noreferrer");
     });
   }
@@ -351,7 +351,7 @@ function init() {
   }
   if (resultsShareBtn) {
     resultsShareBtn.addEventListener("click", () => {
-      const url = "https://twitter.com/intent/tweet?text=I+just+jammed+out+on+Keyboard+Drummer+%F0%9F%A5%81+Try+it+%E2%86%92&url=https%3A%2F%2Fmichaelpyon.github.io%2Fkeyboard-drummer%2F";
+      const url = "https://twitter.com/intent/tweet?text=I+just+jammed+out+on+Keyboard+Drummer+%F0%9F%A5%81+Try+it+%E2%86%92&url=https%3A%2F%2Fkeyboard-drummer.vercel.app%2F";
       window.open(url, "_blank", "noopener,noreferrer");
     });
   }
