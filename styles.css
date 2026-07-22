@@ -1096,79 +1096,6 @@ select:focus-visible {
   transform: scale(0.96);
 }
 
-/* ── Share Modal ────────────────────────────────────────────── */
-.share-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 9000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(9, 19, 28, 0.82);
-  backdrop-filter: blur(4px);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 200ms ease;
-}
-
-.share-modal.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.share-modal.visible .share-modal-card {
-  transform: scale(1) translateY(0);
-  filter: blur(0);
-}
-
-.share-modal-card {
-  background: var(--bg-1);
-  border: none;
-  border-radius: 1rem;
-  padding: 2.5rem 2rem;
-  text-align: center;
-  max-width: 380px;
-  width: 90%;
-  box-shadow: 0px 0px 0px 1px rgba(169, 206, 224, 0.18), 0 0 48px rgba(32, 217, 181, 0.12);
-  transform: scale(0.95) translateY(8px);
-  filter: blur(4px);
-  transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), filter 300ms ease;
-}
-
-.share-modal-icon {
-  font-size: 2.5rem;
-  margin: 0 0 0.5rem;
-}
-
-.share-modal-title {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  color: var(--accent-1);
-  margin: 0 0 1.25rem;
-}
-
-.share-stats {
-  background: rgba(8, 21, 32, 0.6);
-  border: 1px solid var(--panel-border);
-  border-radius: 0.6rem;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1.5rem;
-  font-size: 0.9rem;
-  color: var(--text-soft);
-  line-height: 1.7;
-}
-
-.share-stats strong {
-  color: var(--text-main);
-}
-
-.share-modal-actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
 .btn-share-x {
   display: inline-flex;
   align-items: center;
@@ -1245,6 +1172,120 @@ select:focus-visible {
 .song-library {
   position: relative;
   z-index: 1;
+}
+
+/* ── Library keyboard diagram (keycap map under the hero) ───── */
+.lib-keyboard {
+  margin: 0.9rem auto;
+  max-width: 880px;
+  width: 100%;
+  padding: 0.9rem 1.1rem 1rem;
+  background: var(--panel);
+  border-radius: 18px;
+  backdrop-filter: blur(7px);
+  box-shadow: 0px 0px 0px 1px rgba(169, 206, 224, 0.18), 0 14px 35px rgba(2, 10, 18, 0.32);
+}
+
+.lib-keyboard-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.8rem;
+}
+
+.lib-keyboard-hint {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  opacity: 0.85;
+}
+
+.hand-toggle {
+  display: inline-flex;
+  background: rgba(6, 16, 25, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.hand-toggle-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-soft);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.3rem 0.7rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.hand-toggle-btn.active {
+  background: var(--accent-3);
+  color: var(--bg-0);
+}
+
+.hand-toggle-btn:focus-visible {
+  outline: 2px solid var(--accent-3);
+  outline-offset: 1px;
+}
+
+.lib-keyboard-caps {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.9rem 1.1rem;
+}
+
+.lib-cap-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.lib-cap-keys {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.lib-cap {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-main);
+  background: linear-gradient(180deg, rgba(20, 40, 58, 0.95), rgba(8, 21, 32, 0.95));
+  border: 1.5px solid rgba(255, 255, 255, 0.28);
+  border-bottom-width: 3px;
+  border-radius: 7px;
+  min-width: 2.1rem;
+  padding: 0.32rem 0.5rem;
+  text-align: center;
+  line-height: 1.2;
+  box-shadow: 0 2px 0 rgba(2, 10, 18, 0.6);
+  transition: transform 60ms ease-out, border-color 60ms ease-out, box-shadow 60ms ease-out;
+}
+
+.lib-cap-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cap-tint, var(--text-soft));
+  opacity: 0.85;
+}
+
+.lib-cap-group.hit .lib-cap {
+  transform: translateY(2px) scale(1.04);
+  border-color: var(--cap-tint, var(--accent-3));
+  color: #fff;
+  box-shadow: 0 0 14px var(--cap-tint, var(--accent-3)), 0 1px 0 rgba(2, 10, 18, 0.6);
 }
 
 .library-toolbar {
@@ -1498,9 +1539,28 @@ select:focus-visible {
 
 .results-grade {
   font-family: var(--font-display);
-  font-size: 3.5rem;
+  font-size: 4.5rem;
   line-height: 1;
   margin: 0 0 0.75rem;
+}
+
+/* Streak-flame treatment: heat ramp earned by a 24+ max combo only */
+.results-grade.on-fire {
+  background: linear-gradient(180deg, #ffd77f 0%, #ff9e3d 45%, #ff5f73 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 22px rgba(255, 158, 61, 0.55));
+}
+
+.results-onfire-tag {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  color: var(--accent-2);
+  text-shadow: 0 0 12px rgba(255, 158, 61, 0.6);
+  margin: -0.35rem 0 0.75rem;
 }
 
 .grade-s { color: #57f6ca; text-shadow: 0 0 24px rgba(87, 246, 202, 0.6); }

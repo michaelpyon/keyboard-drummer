@@ -1,3 +1,5 @@
 .DS_Store
 .keyboard-drummer-server.log
 .vercel
+
+.claude/

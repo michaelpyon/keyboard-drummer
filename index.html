@@ -10,12 +10,16 @@
   <meta property="og:title" content="Keyboard Drummer: Play Drums With Your Keyboard" />
   <meta property="og:description" content="Turn your keyboard into a drum kit. Map keys to samples, build patterns, and record your session." />
   <meta property="og:image" content="https://keyboard-drummer.vercel.app/og.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Keyboard Drummer mid-run: falling notes over 7 drum lanes with the keycap reference strip" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Keyboard Drummer" />
   <meta name="twitter:description" content="Turn your keyboard into a drum kit. Map keys to samples, build patterns, and record your session." />
   <meta name="twitter:image" content="https://keyboard-drummer.vercel.app/og.png" />
-  <meta name="twitter:site" content="@michaelpyon" />
-  <meta name="twitter:creator" content="@michaelpyon" />
+  <meta name="twitter:image:alt" content="Keyboard Drummer mid-run: falling notes over 7 drum lanes with the keycap reference strip" />
+  <meta name="twitter:site" content="@mikaships" />
+  <meta name="twitter:creator" content="@mikaships" />
   <meta name="theme-color" content="#09131c">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥁</text></svg>">
   <link rel="canonical" href="https://keyboard-drummer.vercel.app/" />
@@ -132,6 +136,20 @@
         <h1>Keyboard Drummer</h1>
         <p class="subtitle">Pick a song, or jam freestyle. 20 patterns across 7 genres.</p>
       </header>
+
+      <!-- Keyboard diagram: keycap map rendered by renderLibKeyboard() in app.js.
+           Reacts to real keypresses on the library screen; toggle syncs with the
+           in-game handedness setting. -->
+      <div class="lib-keyboard reveal-2" aria-label="Drum key mapping">
+        <div class="lib-keyboard-head">
+          <span class="lib-keyboard-hint">Your keys are the kit. Try one.</span>
+          <div class="hand-toggle" id="libHandToggle" role="group" aria-label="Handedness">
+            <button type="button" class="hand-toggle-btn active" data-hand="righty">Righty</button>
+            <button type="button" class="hand-toggle-btn" data-hand="lefty">Lefty</button>
+          </div>
+        </div>
+        <div class="lib-keyboard-caps" id="libKeyboardCaps"></div>
+      </div>
 
       <div class="library-toolbar reveal-2">
         <div class="genre-tabs" id="genreTabs">
@@ -276,22 +294,6 @@
           <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
           Share on X
         </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Share modal -->
-  <div id="shareModal" class="share-modal" role="dialog" aria-modal="true" aria-label="Session complete">
-    <div class="share-modal-card">
-      <p class="share-modal-icon">🥁</p>
-      <h2 class="share-modal-title">Session Complete</h2>
-      <div id="shareStats" class="share-stats"></div>
-      <div class="share-modal-actions">
-        <button id="shareXBtn" type="button" class="btn-share-x">
-          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-          Share on X
-        </button>
-        <button id="sharePlayAgainBtn" type="button" class="btn-play-again">Play Again</button>
       </div>
     </div>
   </div>

@@ -170,10 +170,6 @@ const countdownEl = document.getElementById("countdown");
 const gameArea = document.getElementById("gameArea");
 const beatGuideLayer = document.getElementById("beatGuideLayer");
 const flashLayer = document.getElementById("flashLayer");
-const shareModal = document.getElementById("shareModal");
-const shareStatsEl = document.getElementById("shareStats");
-const shareXBtn = document.getElementById("shareXBtn");
-const sharePlayAgainBtn = document.getElementById("sharePlayAgainBtn");
 
 // Song library elements
 const songLibrary = document.getElementById("songLibrary");
@@ -282,20 +278,6 @@ function init() {
   restartBtn.addEventListener("click", () => {
     startSong();
   });
-
-  if (shareXBtn) {
-    shareXBtn.addEventListener("click", () => {
-      const url = "https://twitter.com/intent/tweet?text=I+just+jammed+out+on+Keyboard+Drummer+%F0%9F%A5%81+Try+it+%E2%86%92&url=https%3A%2F%2Fkeyboard-drummer.vercel.app%2F";
-      window.open(url, "_blank", "noopener,noreferrer");
-    });
-  }
-
-  if (sharePlayAgainBtn) {
-    sharePlayAgainBtn.addEventListener("click", () => {
-      hideShareModal();
-      startSong();
-    });
-  }
 
   jamBtn.addEventListener("click", () => {
     enterJamMode();
@@ -467,6 +449,14 @@ function applyHandMode(mode) {
 
   renderKeyTiles();
   renderKeyrefStrip();
+  renderLibKeyboard();
+
+  const libHandToggle = document.getElementById("libHandToggle");
+  if (libHandToggle) {
+    for (const btn of libHandToggle.querySelectorAll(".hand-toggle-btn")) {
+      btn.classList.toggle("active", btn.dataset.hand === mode);
+    }
+  }
 
   if (!isRunning && !isRecording) {
     setStatus(`${activeSong.title}: ${activeSong.description} | ${mode === "lefty" ? "Lefty" : "Righty"} mode | Kit: ${getActiveKit().label}`);
@@ -492,6 +482,51 @@ function renderKeyrefStrip() {
 
     item.append(padLabel, keyLabel);
     keyrefStrip.appendChild(item);
+  }
+}
+
+// Library keyboard diagram: keycap groups ordered roughly left-to-right by
+// physical key position, tinted per lane, flashed by pressLane on real hits.
+function renderLibKeyboard() {
+  const caps = document.getElementById("libKeyboardCaps");
+  if (!caps) return;
+  caps.innerHTML = "";
+
+  const ROWS = ["1234567890", "qwertyuiop", "asdfghjkl", "zxcvbnm"];
+  const keyOrder = (key) => {
+    if (key === "space") return 100;
+    for (let r = 0; r < ROWS.length; r++) {
+      const i = ROWS[r].indexOf(key);
+      if (i !== -1) return i * 4 + r;
+    }
+    return 99;
+  };
+  const laneOrder = (lane) =>
+    Math.min(...(activeMapping[lane.id] || ["z"]).map(keyOrder));
+
+  const lanes = [...LANE_META].sort((a, b) => laneOrder(a) - laneOrder(b));
+
+  for (const lane of lanes) {
+    const group = document.createElement("div");
+    group.className = "lib-cap-group";
+    group.dataset.lane = lane.id;
+    group.style.setProperty("--cap-tint", `var(--lane-${lane.id})`);
+
+    const keysRow = document.createElement("div");
+    keysRow.className = "lib-cap-keys";
+    for (const key of activeMapping[lane.id] || []) {
+      const cap = document.createElement("span");
+      cap.className = "lib-cap";
+      cap.textContent = formatKey(key);
+      keysRow.appendChild(cap);
+    }
+
+    const label = document.createElement("span");
+    label.className = "lib-cap-label";
+    label.textContent = lane.label;
+
+    group.append(keysRow, label);
+    caps.appendChild(group);
   }
 }
 
@@ -1055,40 +1090,6 @@ function checkSongEnd(elapsed) {
   showResultsModal();
 }
 
-function showShareModal() {
-  if (!shareModal || !shareStatsEl) return;
-
-  const accuracy = computeAccuracy();
-  shareStatsEl.innerHTML =
-    `<strong>${activeSong.title}</strong><br>` +
-    `Score: <strong>${score}</strong> &nbsp;|&nbsp; ` +
-    `Max Combo: <strong>${maxCombo}</strong> &nbsp;|&nbsp; ` +
-    `Accuracy: <strong>${accuracy}%</strong>`;
-
-  shareModal.classList.add("visible");
-  // Focus trap: focus first button, trap Tab, close on Escape
-  const firstBtn = shareModal.querySelector("button");
-  if (firstBtn) firstBtn.focus();
-  shareModal._trapHandler = function (e) {
-    if (e.key === "Escape") { hideShareModal(); return; }
-    if (e.key !== "Tab") return;
-    const btns = shareModal.querySelectorAll("button");
-    const first = btns[0], last = btns[btns.length - 1];
-    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-  };
-  shareModal.addEventListener("keydown", shareModal._trapHandler);
-}
-
-function hideShareModal() {
-  if (!shareModal) return;
-  shareModal.classList.remove("visible");
-  if (shareModal._trapHandler) {
-    shareModal.removeEventListener("keydown", shareModal._trapHandler);
-    shareModal._trapHandler = null;
-  }
-}
-
 function stopLoop() {
   if (rafId !== null) {
     cancelAnimationFrame(rafId);
@@ -1312,6 +1313,17 @@ function pressLane(lane) {
   laneReleaseTimers[lane] = setTimeout(() => {
     laneEl.classList.remove("pressed");
   }, 120);
+
+  // Flash the matching keycap on the library diagram (instant proof the
+  // instrument is live before any song starts).
+  const capGroup = document.querySelector(`.lib-cap-group[data-lane="${lane}"]`);
+  if (capGroup) {
+    capGroup.classList.add("hit");
+    if (capGroup._hitTimer) clearTimeout(capGroup._hitTimer);
+    capGroup._hitTimer = setTimeout(() => {
+      capGroup.classList.remove("hit");
+    }, 160);
+  }
 }
 
 function clearNotes() {
@@ -1708,6 +1720,17 @@ function bindLibraryEvents() {
       enterJamMode();
     });
   }
+
+  // Library handedness toggle mirrors the in-game setting.
+  const libHandToggle = document.getElementById("libHandToggle");
+  if (libHandToggle) {
+    libHandToggle.addEventListener("click", (e) => {
+      const btn = e.target.closest(".hand-toggle-btn");
+      if (!btn) return;
+      handMode.value = btn.dataset.hand;
+      applyHandMode(btn.dataset.hand);
+    });
+  }
 }
 
 function selectSongFromLibrary(songId) {
@@ -1788,9 +1811,12 @@ function showResultsModal() {
     resultsTitle.textContent = activeSong.title + " Complete";
   }
 
+  const onFire = maxCombo >= 24;
+
   if (resultsSummary) {
     resultsSummary.innerHTML =
-      `<div class="results-grade grade-${grade.toLowerCase()}">${grade}</div>` +
+      `<div class="results-grade grade-${grade.toLowerCase()}${onFire ? " on-fire" : ""}">${grade}</div>` +
+      (onFire ? `<div class="results-onfire-tag">ON FIRE x${maxCombo}</div>` : "") +
       `<div class="results-stats-grid">` +
         `<div class="results-stat"><span>Score</span><strong>${score}</strong></div>` +
         `<div class="results-stat"><span>Accuracy</span><strong>${accuracy}%</strong></div>` +

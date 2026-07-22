@@ -1,7 +1,7 @@
 "use strict";
 
 // ---------------------------------------------------------------------------
-// Song Library — 20 drum patterns across 6 genres
+// Song Library — 20 drum patterns across 7 genres
 // Each song uses the existing addBeat / finalizeSong helpers from app.js.
 // Songs are built by buildSongLibrary() which returns an array of song objects.
 // ---------------------------------------------------------------------------
