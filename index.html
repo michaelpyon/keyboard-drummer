@@ -21,11 +21,11 @@
   <meta name="twitter:site" content="@mikaships" />
   <meta name="twitter:creator" content="@mikaships" />
   <meta name="theme-color" content="#09131c">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥁</text></svg>">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="canonical" href="https://keyboard-drummer.vercel.app/" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bungee&amp;family=Space+Grotesk:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <style>
     .mobile-gate {
@@ -45,10 +45,19 @@
       overflow-y: auto;
     }
     .mobile-gate h1 {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.65rem;
       font-size: 1.8rem;
       font-weight: 700;
       margin: 0;
       color: var(--accent-3, #72d8ff);
+    }
+    .mobile-gate h1 img {
+      width: 2rem;
+      height: 2rem;
     }
     .mobile-gate > p {
       font-size: 0.95rem;
@@ -89,7 +98,7 @@
       cursor: pointer;
       padding: 0 1.5rem;
       font-family: inherit;
-      transition: background 0.2s;
+      transition: background-color 200ms cubic-bezier(0.2, 0, 0, 1);
     }
     .mobile-gate button:active {
       background: var(--accent-1, #20d9b5);
@@ -99,29 +108,42 @@
       #audioOverlay { display: none !important; }
       #appMain { display: none !important; }
       .bg-shape { display: none !important; }
+      .skip-nav { display: none !important; }
     }
   </style>
 </head>
 <body>
   <div class="mobile-gate" id="mobile-notice">
-    <h1>🥁 Keyboard Drummer</h1>
+    <h1><img src="favicon.svg" alt="" aria-hidden="true">Keyboard Drummer</h1>
     <p>Turn your keyboard into a drum kit. Map keys to samples, build patterns, jam freestyle.</p>
     <div class="preview-card">
       <img src="og.png" alt="Keyboard Drummer preview" />
     </div>
     <p class="explain">This instrument needs a physical keyboard. Open on your laptop or desktop to start drumming.</p>
     <button onclick="navigator.clipboard.writeText('https://keyboard-drummer.vercel.app/').then(() => this.textContent = 'Link copied!')">
-      📋 Copy Link for Desktop
+      Copy Link for Desktop
     </button>
   </div>
-  <a href="#gameArea" class="skip-nav">Skip to game</a>
+  <a href="#gameArea" class="skip-nav" aria-hidden="true" inert>Skip to game</a>
   <div class="bg-shape shape-a" aria-hidden="true"></div>
   <div class="bg-shape shape-b" aria-hidden="true"></div>
 
   <!-- Audio unlock overlay: required by browser autoplay policy -->
   <div id="audioOverlay" class="audio-overlay" role="dialog" aria-modal="true" aria-label="Start game">
     <div class="audio-overlay-card">
-      <p class="audio-overlay-icon">🥁</p>
+      <div class="audio-overlay-icon">
+        <svg class="brand-mark" viewBox="0 0 72 58" role="img" aria-label="Keyboard Drummer drum mark" fill="none">
+          <line x1="12" y1="7" x2="43" y2="26" stroke="var(--lane-bass)" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="12" cy="7" r="3.4" fill="var(--lane-bass)"/>
+          <line x1="60" y1="7" x2="29" y2="26" stroke="var(--lane-bass)" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="60" cy="7" r="3.4" fill="var(--lane-bass)"/>
+          <path d="M14 31 v13 a22 7 0 0 0 44 0 v-13" fill="rgba(114,216,255,0.12)" stroke="var(--accent-3)" stroke-width="2.5" stroke-linejoin="round"/>
+          <ellipse cx="36" cy="31" rx="22" ry="7" fill="#0d2233" stroke="var(--accent-3)" stroke-width="2.5"/>
+          <line x1="21" y1="36" x2="21" y2="44" stroke="var(--accent-1)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="36" y1="38.5" x2="36" y2="46.5" stroke="var(--accent-1)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="51" y1="36" x2="51" y2="44" stroke="var(--accent-1)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
       <h2>Keyboard Drummer</h2>
       <p>Tap anywhere to enable audio and start playing.</p>
       <button id="audioStartBtn" type="button">Start Drumming</button>
@@ -216,6 +238,7 @@
     <section class="game-shell" aria-label="Drum lanes">
       <div class="game-area" id="gameArea">
         <div class="countdown" id="countdown"></div>
+        <div class="stage-streak" id="stageStreak" aria-hidden="true"></div>
         <div class="judgement" id="judgement"></div>
         <div class="beat-guide-layer" id="beatGuideLayer"></div>
         <div class="flash-layer" id="flashLayer"></div>
@@ -281,14 +304,31 @@
   </main>
 
   <!-- Results modal (replaces old share modal for song completion) -->
-  <div id="resultsModal" class="results-modal" role="dialog" aria-modal="true" aria-label="Song results">
+  <div id="resultsModal" class="results-modal" role="dialog" aria-modal="true" aria-label="Song results" aria-hidden="true" inert>
     <div class="results-modal-card">
-      <p class="results-modal-icon">🥁</p>
+      <div class="results-modal-icon">
+        <svg class="brand-mark" viewBox="0 0 72 58" role="img" aria-label="Keyboard Drummer drum mark" fill="none">
+          <line x1="12" y1="7" x2="43" y2="26" stroke="var(--lane-bass)" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="12" cy="7" r="3.4" fill="var(--lane-bass)"/>
+          <line x1="60" y1="7" x2="29" y2="26" stroke="var(--lane-bass)" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="60" cy="7" r="3.4" fill="var(--lane-bass)"/>
+          <path d="M14 31 v13 a22 7 0 0 0 44 0 v-13" fill="rgba(114,216,255,0.12)" stroke="var(--accent-3)" stroke-width="2.5" stroke-linejoin="round"/>
+          <ellipse cx="36" cy="31" rx="22" ry="7" fill="#0d2233" stroke="var(--accent-3)" stroke-width="2.5"/>
+          <line x1="21" y1="36" x2="21" y2="44" stroke="var(--accent-1)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="36" y1="38.5" x2="36" y2="46.5" stroke="var(--accent-1)" stroke-width="2" stroke-linecap="round"/>
+          <line x1="51" y1="36" x2="51" y2="44" stroke="var(--accent-1)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
       <h2 class="results-modal-title" id="resultsTitle">Song Complete</h2>
       <div class="results-summary" id="resultsSummary"></div>
       <div class="results-lanes" id="resultsLanes"></div>
+      <div class="results-attrib" aria-hidden="true">
+        <span class="results-attrib-mark">Keyboard Drummer</span>
+        <span class="results-attrib-url">keyboard-drummer.vercel.app</span>
+      </div>
       <div class="results-modal-actions">
         <button id="resultsRetryBtn" type="button" class="btn-play-again">Retry</button>
+        <button id="resultsTryNextBtn" type="button" class="btn-try-next" style="display:none"></button>
         <button id="resultsLibraryBtn" type="button" class="btn-back-library">Back to Library</button>
         <button id="resultsShareBtn" type="button" class="btn-share-x" aria-label="Share results on X">
           <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
@@ -308,7 +348,14 @@
 
       function unlock() {
         overlay.classList.add('hiding');
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.setAttribute('inert', '');
         appMain.style.display = '';
+        var skipNav = document.querySelector('.skip-nav');
+        if (skipNav) {
+          skipNav.removeAttribute('aria-hidden');
+          skipNav.removeAttribute('inert');
+        }
         setTimeout(function () { overlay.style.display = 'none'; }, 250);
         // Focus game area so keyboard events register immediately
         var ga = document.getElementById('gameArea');

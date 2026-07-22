@@ -174,6 +174,8 @@ const flashLayer = document.getElementById("flashLayer");
 // Song library elements
 const songLibrary = document.getElementById("songLibrary");
 const gameScreen = document.getElementById("gameScreen");
+const appMain = document.getElementById("appMain");
+const skipNav = document.querySelector(".skip-nav");
 const songGrid = document.getElementById("songGrid");
 const genreTabs = document.getElementById("genreTabs");
 const diffSortBtn = document.getElementById("diffSortBtn");
@@ -193,6 +195,8 @@ const resultsLanes = document.getElementById("resultsLanes");
 const resultsRetryBtn = document.getElementById("resultsRetryBtn");
 const resultsLibraryBtn = document.getElementById("resultsLibraryBtn");
 const resultsShareBtn = document.getElementById("resultsShareBtn");
+const resultsTryNextBtn = document.getElementById("resultsTryNextBtn");
+const stageStreak = document.getElementById("stageStreak");
 
 const laneEls = {};
 for (const lane of document.querySelectorAll(".lane")) {
@@ -226,6 +230,7 @@ let recordingCount = 0;
 
 let rafId = null;
 let startTimeMs = 0;
+let pauseStartMs = null;
 let nextSpawnIndex = 0;
 let songNotes = [];
 let activeNotes = [];
@@ -334,27 +339,81 @@ function init() {
   if (resultsShareBtn) {
     resultsShareBtn.addEventListener("click", () => {
       const acc = computeAccuracy();
-      let grade = "F";
-      if (acc >= 98) grade = "S";
-      else if (acc >= 90) grade = "A";
-      else if (acc >= 80) grade = "B";
-      else if (acc >= 70) grade = "C";
-      else if (acc >= 60) grade = "D";
+      const grade = computeGrade(acc);
       const songTitle = activeSong ? activeSong.title : "Keyboard Drummer";
-      const tweetText = `${grade} rank, ${acc}% accuracy on "${songTitle}" in Keyboard Drummer! Can you beat it?`;
+      const fireTag = maxCombo >= 24 ? ", ON FIRE" : "";
+      const tweetText = `${grade} rank, ${acc}% accuracy, ${maxCombo} max combo${fireTag} on "${songTitle}" in Keyboard Drummer! Can you beat it?`;
       const tweetUrl = "https://keyboard-drummer.vercel.app/";
       const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(tweetUrl)}`;
       window.open(url, "_blank", "noopener,noreferrer");
     });
   }
 
+  if (resultsTryNextBtn) {
+    resultsTryNextBtn.addEventListener("click", () => {
+      const nextId = resultsTryNextBtn.dataset.songId;
+      if (!nextId) {
+        return;
+      }
+      hideResultsModal();
+      selectSongFromLibrary(nextId);
+    });
+  }
+
   window.addEventListener("keydown", onKeyDown, { capture: true });
   gameArea.addEventListener("pointerdown", focusGameArea);
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") {
-      focusGameArea();
+    if (document.visibilityState === "hidden") {
+      pauseGame();
+      return;
     }
+    resumeGame();
+    focusGameArea();
   });
+}
+
+// Focus-loss honesty: song elapsed is (performance.now() - startTimeMs), and
+// spawning/judging both run off that same base inside the rAF loop. When the
+// tab hides, rAF stops but wall-clock keeps going, so without a pause the run
+// would fast-forward on return. Pause cleanly instead: freeze the loop and the
+// metronome, then shift startTimeMs by the paused span on resume so elapsed,
+// spawning, and judging all stay on one consistent clock.
+function pauseGame() {
+  if (!isRunning || pauseStartMs !== null) {
+    return;
+  }
+
+  pauseStartMs = performance.now();
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+  stopMetronomeScheduler();
+  countdownEl.textContent = "Paused";
+}
+
+function resumeGame() {
+  if (!isRunning || pauseStartMs === null) {
+    return;
+  }
+
+  const pausedFor = performance.now() - pauseStartMs;
+  pauseStartMs = null;
+  startTimeMs += pausedFor;
+  countdownEl.textContent = "";
+
+  // Realign the metronome to the song's beat grid at the resumed position.
+  const engine = getAudioEngine();
+  if (engine) {
+    const bpm = (activeSong && activeSong.bpm) || 120;
+    const beatDur = 60 / bpm;
+    const elapsed = (performance.now() - startTimeMs) / 1000;
+    const beatsIn = Math.max(0, Math.ceil((elapsed - LEAD_IN) / beatDur));
+    const nextBeatElapsed = LEAD_IN + beatsIn * beatDur;
+    startMetronomeScheduler(bpm, engine.ctx.currentTime + (nextBeatElapsed - elapsed), beatsIn);
+  }
+
+  rafId = requestAnimationFrame(gameLoop);
 }
 
 function bindAudioUnlock() {
@@ -593,6 +652,7 @@ function enterJamMode() {
   clearNotes();
   isRunning = false;
   jamModeActive = true;
+  updateStageStreak();
   hideSongProgress();
   setStatus("Jam mode active. Play freely; drums are always live.");
   updateModeReadout();
@@ -1083,6 +1143,7 @@ function checkSongEnd(elapsed) {
   isRunning = false;
   stopLoop();
   hideSongProgress();
+  updateStageStreak();
 
   const accuracy = computeAccuracy();
   setStatus(`Finished ${activeSong.title}. Score ${score}, accuracy ${accuracy}%, max combo ${maxCombo}.`);
@@ -1095,6 +1156,7 @@ function stopLoop() {
     cancelAnimationFrame(rafId);
     rafId = null;
   }
+  pauseStartMs = null;
   stopMetronomeScheduler();
 }
 
@@ -1125,6 +1187,8 @@ function resetScoreboard() {
 }
 
 function updateStreakReadout() {
+  updateStageStreak();
+
   if (!streakReadout) {
     return;
   }
@@ -1155,6 +1219,123 @@ function updateStreakReadout() {
   }
 
   streakReadout.textContent = "Build a streak!";
+}
+
+// Above-the-fold streak treatment: lives inside the stage viewport so the
+// ON FIRE moment is visible while it happens, not below the fold.
+function updateStageStreak() {
+  if (gameArea) {
+    gameArea.classList.toggle("on-fire", isRunning && combo >= 24);
+  }
+
+  if (!stageStreak) {
+    return;
+  }
+
+  stageStreak.classList.remove("hot", "fire", "show");
+
+  if (!isRunning) {
+    stageStreak.textContent = "";
+    return;
+  }
+
+  if (combo >= 24) {
+    stageStreak.textContent = `ON FIRE x${combo}`;
+    stageStreak.classList.add("fire", "show");
+    return;
+  }
+
+  if (combo >= 12) {
+    stageStreak.textContent = `HOT STREAK x${combo}`;
+    stageStreak.classList.add("hot", "show");
+    return;
+  }
+
+  if (combo >= 5) {
+    stageStreak.textContent = `x${combo}`;
+    stageStreak.classList.add("show");
+    return;
+  }
+
+  stageStreak.textContent = "";
+}
+
+function computeGrade(accuracy) {
+  if (accuracy >= 98) return "S";
+  if (accuracy >= 90) return "A";
+  if (accuracy >= 80) return "B";
+  if (accuracy >= 70) return "C";
+  if (accuracy >= 60) return "D";
+  return "F";
+}
+
+// Per-song best persistence: grade + accuracy per song id in localStorage.
+const BEST_STORAGE_KEY = "kd-best-v1";
+const GRADE_RANK = { F: 0, D: 1, C: 2, B: 3, A: 4, S: 5 };
+
+function loadBestResults() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(BEST_STORAGE_KEY));
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveBestResults(bests) {
+  try {
+    localStorage.setItem(BEST_STORAGE_KEY, JSON.stringify(bests));
+  } catch {
+    // Storage unavailable (private mode etc): play on without persistence.
+  }
+}
+
+function isBetterResult(grade, accuracy, prev) {
+  if (!prev || !(prev.grade in GRADE_RANK)) {
+    return true;
+  }
+  if (GRADE_RANK[grade] !== GRADE_RANK[prev.grade]) {
+    return GRADE_RANK[grade] > GRADE_RANK[prev.grade];
+  }
+  return accuracy > (Number(prev.accuracy) || 0);
+}
+
+// Persists the run if it beats the stored best. Returns true only for a
+// genuine improvement over an existing best (first-ever runs set the baseline
+// quietly, they do not fire NEW BEST).
+function recordBestResult(song, grade, accuracy) {
+  if (!song || !song.genre) {
+    return false;
+  }
+
+  const bests = loadBestResults();
+  const prev = bests[song.id];
+
+  if (!prev) {
+    bests[song.id] = { grade, accuracy };
+    saveBestResults(bests);
+    return false;
+  }
+
+  if (isBetterResult(grade, accuracy, prev)) {
+    bests[song.id] = { grade, accuracy };
+    saveBestResults(bests);
+    return true;
+  }
+
+  return false;
+}
+
+function findNextHarderSong(song) {
+  if (!song || !song.genre) {
+    return null;
+  }
+
+  const harder = songs
+    .filter((s) => s.genre === song.genre && s.id !== song.id && (s.difficulty || 0) > (song.difficulty || 0))
+    .sort((a, b) => (a.difficulty || 0) - (b.difficulty || 0));
+
+  return harder[0] || null;
 }
 
 function computeAccuracy() {
@@ -1383,11 +1564,11 @@ function clamp(value, min, max) {
 // but audio events fire at exact beat boundaries regardless of JS timing noise.
 // ---------------------------------------------------------------------------
 
-function startMetronomeScheduler(bpm, audioStartTime) {
+function startMetronomeScheduler(bpm, audioStartTime, beatIndex = 0) {
   stopMetronomeScheduler();
   metronomeBpm        = bpm;
   nextMetronomeTime   = audioStartTime;
-  metronomeBeatIndex  = 0;
+  metronomeBeatIndex  = beatIndex;
   runMetronomeScheduler();
 }
 
@@ -1626,6 +1807,8 @@ function renderSongLibrary() {
     filtered.sort((a, b) => (b.difficulty || 0) - (a.difficulty || 0));
   }
 
+  const bests = loadBestResults();
+
   for (const song of filtered) {
     const card = document.createElement("button");
     card.className = "song-card";
@@ -1637,9 +1820,14 @@ function renderSongLibrary() {
 
     const stars = renderDifficultyStars(song.difficulty || 1);
     const durationSec = Math.round((song.duration || 60) - LEAD_IN - 2.4);
+    const best = bests[song.id];
+    const bestBadge = best && best.grade in GRADE_RANK
+      ? `<span class="song-card-best grade-${String(best.grade).toLowerCase()}" title="Personal best">BEST ${best.grade} &middot; ${Number(best.accuracy) || 0}%</span>`
+      : "";
 
     card.innerHTML =
       `<span class="song-card-genre" style="background:${genreColor}">${song.genre || "Other"}</span>` +
+      bestBadge +
       `<span class="song-card-title">${song.title}</span>` +
       `<span class="song-card-meta">${song.bpm} BPM &middot; ${durationSec}s</span>` +
       `<span class="song-card-diff">${stars}</span>` +
@@ -1747,6 +1935,7 @@ function showLibrary() {
   clearNotes();
   isRunning = false;
   jamModeActive = false;
+  updateStageStreak();
   updateModeReadout();
   hideSongProgress();
   renderSongLibrary();
@@ -1777,7 +1966,7 @@ function updateSongProgress(elapsed) {
   const songElapsed = Math.max(0, elapsed - LEAD_IN);
   const progress = Math.min(1, songElapsed / totalDuration);
 
-  songProgressFill.style.width = (progress * 100) + "%";
+  songProgressFill.style.transform = `scaleX(${progress})`;
 
   const remainSec = Math.max(0, Math.round(totalDuration - songElapsed));
   songProgressLabel.textContent = activeSong.title + ": " + remainSec + "s";
@@ -1785,7 +1974,7 @@ function updateSongProgress(elapsed) {
 
 function hideSongProgress() {
   if (songProgressBar) songProgressBar.style.display = "none";
-  if (songProgressFill) songProgressFill.style.width = "0%";
+  if (songProgressFill) songProgressFill.style.transform = "scaleX(0)";
   if (songProgressLabel) songProgressLabel.textContent = "";
 }
 
@@ -1798,44 +1987,64 @@ function showResultsModal() {
 
   const accuracy = computeAccuracy();
   const totalNotes = hits + misses;
-
-  // Grade
-  let grade = "F";
-  if (accuracy >= 98) grade = "S";
-  else if (accuracy >= 90) grade = "A";
-  else if (accuracy >= 80) grade = "B";
-  else if (accuracy >= 70) grade = "C";
-  else if (accuracy >= 60) grade = "D";
+  const grade = computeGrade(accuracy);
 
   if (resultsTitle) {
     resultsTitle.textContent = activeSong.title + " Complete";
   }
 
   const onFire = maxCombo >= 24;
+  const newBest = recordBestResult(activeSong, grade, accuracy);
 
   if (resultsSummary) {
     resultsSummary.innerHTML =
       `<div class="results-grade grade-${grade.toLowerCase()}${onFire ? " on-fire" : ""}">${grade}</div>` +
       (onFire ? `<div class="results-onfire-tag">ON FIRE x${maxCombo}</div>` : "") +
+      (newBest ? `<div class="results-newbest">NEW BEST</div>` : "") +
+      `<div class="results-hero-stats">` +
+        `<div class="results-stat hero"><span>Accuracy</span><strong>${accuracy}%</strong></div>` +
+        `<div class="results-stat hero"><span>Max Combo</span><strong>${maxCombo}</strong></div>` +
+      `</div>` +
       `<div class="results-stats-grid">` +
         `<div class="results-stat"><span>Score</span><strong>${score}</strong></div>` +
-        `<div class="results-stat"><span>Accuracy</span><strong>${accuracy}%</strong></div>` +
-        `<div class="results-stat"><span>Max Combo</span><strong>${maxCombo}</strong></div>` +
         `<div class="results-stat"><span>Perfect</span><strong>${perfectCount}</strong></div>` +
         `<div class="results-stat"><span>Good</span><strong>${goodCount}</strong></div>` +
         `<div class="results-stat"><span>Ok</span><strong>${okCount}</strong></div>` +
         `<div class="results-stat"><span>Misses</span><strong>${misses}</strong></div>` +
-        `<div class="results-stat"><span>Total Notes</span><strong>${totalNotes}</strong></div>` +
+        `<div class="results-stat"><span>Attempts</span><strong>${totalNotes}</strong></div>` +
       `</div>`;
   }
 
   if (resultsLanes) {
+    // Honest lane bars: only lanes the chart actually used get a percentage.
+    // A lane with zero charted notes renders as a quiet "no notes" state,
+    // never a full 100% bar for zero data.
+    const chartCounts = {};
+    for (const lane of LANE_META) {
+      chartCounts[lane.id] = 0;
+    }
+    for (const note of songNotes) {
+      if (chartCounts[note.lane] !== undefined) {
+        chartCounts[note.lane] += 1;
+      }
+    }
+
     let lanesHtml = '<div class="results-lane-grid">';
     for (const lane of LANE_META) {
+      if (chartCounts[lane.id] === 0) {
+        lanesHtml +=
+          `<div class="results-lane-item no-notes">` +
+            `<span class="results-lane-name">${lane.label}</span>` +
+            `<div class="results-lane-bar"></div>` +
+            `<span class="results-lane-pct">no notes</span>` +
+          `</div>`;
+        continue;
+      }
+
       const h = laneHits[lane.id] || 0;
       const m = laneMisses[lane.id] || 0;
       const total = h + m;
-      const pct = total > 0 ? Math.round((h / total) * 100) : 100;
+      const pct = total > 0 ? Math.round((h / total) * 100) : 0;
       lanesHtml +=
         `<div class="results-lane-item">` +
           `<span class="results-lane-name">${lane.label}</span>` +
@@ -1847,6 +2056,28 @@ function showResultsModal() {
     resultsLanes.innerHTML = lanesHtml;
   }
 
+  if (resultsTryNextBtn) {
+    const nextSong = findNextHarderSong(activeSong);
+    if (nextSong) {
+      resultsTryNextBtn.textContent = `Try next: ${nextSong.title}`;
+      resultsTryNextBtn.dataset.songId = nextSong.id;
+      resultsTryNextBtn.style.display = "";
+    } else {
+      resultsTryNextBtn.dataset.songId = "";
+      resultsTryNextBtn.style.display = "none";
+    }
+  }
+
+  resultsModal.removeAttribute("inert");
+  resultsModal.setAttribute("aria-hidden", "false");
+  if (appMain) {
+    appMain.setAttribute("aria-hidden", "true");
+    appMain.setAttribute("inert", "");
+  }
+  if (skipNav) {
+    skipNav.setAttribute("aria-hidden", "true");
+    skipNav.setAttribute("inert", "");
+  }
   resultsModal.classList.add("visible");
 
   // Focus trap
@@ -1866,6 +2097,16 @@ function showResultsModal() {
 function hideResultsModal() {
   if (!resultsModal) return;
   resultsModal.classList.remove("visible");
+  resultsModal.setAttribute("aria-hidden", "true");
+  resultsModal.setAttribute("inert", "");
+  if (appMain) {
+    appMain.removeAttribute("aria-hidden");
+    appMain.removeAttribute("inert");
+  }
+  if (skipNav) {
+    skipNav.removeAttribute("aria-hidden");
+    skipNav.removeAttribute("inert");
+  }
   if (resultsModal._trapHandler) {
     resultsModal.removeEventListener("keydown", resultsModal._trapHandler);
     resultsModal._trapHandler = null;

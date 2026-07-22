@@ -15,8 +15,10 @@
   --lane-hihat: #3cb7ff;
   --lane-snare: #20d9b5;
   --lane-bass: #ffcf49;
-  --lane-lowtom: #ff9e3d;
-  --lane-hightom: #ffa54d;
+  /* Twin toms split by depth: low tom sits dark rust, high tom pale apricot,
+     mirroring their pitch so all 7 lanes stay distinct in a screenshot. */
+  --lane-lowtom: #e8641f;
+  --lane-hightom: #ffbd73;
   --lane-ride: #8b9cff;
   --lane-crash: #ff5f73;
   --hit-line-offset: 86px;
@@ -155,7 +157,8 @@ button {
 
 button {
   cursor: pointer;
-  transition: transform 140ms ease, border-color 140ms ease, background-color 140ms ease;
+  touch-action: manipulation;
+  transition: transform 140ms cubic-bezier(0.2, 0, 0, 1), border-color 140ms cubic-bezier(0.2, 0, 0, 1), background-color 140ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 button:hover {
@@ -165,7 +168,7 @@ button:hover {
 
 button:active {
   transform: translateY(0px) scale(0.96);
-  transition: transform 80ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 80ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 button:focus-visible,
@@ -307,7 +310,7 @@ select:focus-visible {
   font-family: var(--font-mono);
   font-size: 0.82rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-main);
   background: rgba(6, 16, 25, 0.88);
   border: 1.5px solid rgba(255, 255, 255, 0.38);
   border-radius: 6px;
@@ -405,7 +408,7 @@ select:focus-visible {
   position: relative;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
-  transition: background-color 60ms ease-out, box-shadow 60ms ease-out, transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: background-color 60ms cubic-bezier(0.2, 0, 0, 1), box-shadow 60ms cubic-bezier(0.2, 0, 0, 1), transform 200ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .lane:last-child {
@@ -461,12 +464,12 @@ select:focus-visible {
   box-shadow: inset 0 0 40px rgba(255, 207, 73, 0.25), 0 0 24px rgba(255, 207, 73, 0.12);
 }
 .lane[data-lane="lowtom"].pressed {
-  background: rgba(255, 158, 61, 0.28);
-  box-shadow: inset 0 0 40px rgba(255, 158, 61, 0.25), 0 0 24px rgba(255, 158, 61, 0.12);
+  background: rgba(232, 100, 31, 0.28);
+  box-shadow: inset 0 0 40px rgba(232, 100, 31, 0.25), 0 0 24px rgba(232, 100, 31, 0.12);
 }
 .lane[data-lane="hightom"].pressed {
-  background: rgba(255, 165, 77, 0.28);
-  box-shadow: inset 0 0 40px rgba(255, 165, 77, 0.25), 0 0 24px rgba(255, 165, 77, 0.12);
+  background: rgba(255, 189, 115, 0.28);
+  box-shadow: inset 0 0 40px rgba(255, 189, 115, 0.25), 0 0 24px rgba(255, 189, 115, 0.12);
 }
 .lane[data-lane="ride"].pressed {
   background: rgba(139, 156, 255, 0.28);
@@ -563,7 +566,7 @@ select:focus-visible {
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1.15;
-  color: #ffffff;
+  color: var(--text-main);
   background: rgba(6, 16, 25, 0.9);
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.55);
 }
@@ -726,13 +729,13 @@ select:focus-visible {
 }
 
 .note-lowtom {
-  background: linear-gradient(135deg, #ff8b2b, #ffca66);
-  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.25), 0 0 14px rgba(255, 158, 61, 0.6);
+  background: linear-gradient(135deg, #cf4f12, #f57e35);
+  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.25), 0 0 14px rgba(232, 100, 31, 0.6);
 }
 
 .note-hightom {
-  background: linear-gradient(135deg, #ff9f45, #ffd06f);
-  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.25), 0 0 14px rgba(255, 165, 77, 0.6);
+  background: linear-gradient(135deg, #ffb35c, #ffdba6);
+  box-shadow: inset 0 2px 6px rgba(255, 255, 255, 0.25), 0 0 14px rgba(255, 189, 115, 0.6);
 }
 
 .note-ride {
@@ -1058,8 +1061,15 @@ select:focus-visible {
 }
 
 .audio-overlay-icon {
-  font-size: 3rem;
+  display: flex;
+  justify-content: center;
   margin: 0 0 0.75rem;
+}
+
+.brand-mark {
+  width: 64px;
+  height: auto;
+  display: block;
 }
 
 .audio-overlay-card h2 {
@@ -1100,8 +1110,8 @@ select:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
-  background: #000;
-  color: #fff;
+  background: #05090d;
+  color: #f3f8fb;
   border: 1px solid rgba(255,255,255,0.18);
   border-radius: 0.5rem;
   padding: 0.6rem 1.2rem;
@@ -1110,15 +1120,15 @@ select:focus-visible {
   font-weight: 700;
   cursor: pointer;
   min-height: 44px;
-  transition: background 0.15s;
+  transition: background 150ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .btn-share-x svg path {
-  fill: #fff;
+  fill: currentColor;
 }
 
 .btn-share-x:hover {
-  background: #1a1a1a;
+  background: #151d25;
 }
 
 .btn-share-x:active {
@@ -1284,7 +1294,7 @@ select:focus-visible {
 .lib-cap-group.hit .lib-cap {
   transform: translateY(2px) scale(1.04);
   border-color: var(--cap-tint, var(--accent-3));
-  color: #fff;
+  color: var(--text-main);
   box-shadow: 0 0 14px var(--cap-tint, var(--accent-3)), 0 1px 0 rgba(2, 10, 18, 0.6);
 }
 
@@ -1463,10 +1473,12 @@ select:focus-visible {
   left: 0;
   top: 0;
   bottom: 0;
-  width: 0%;
+  width: 100%;
   background: linear-gradient(90deg, var(--accent-1), var(--accent-3));
   border-radius: 10px;
-  transition: width 200ms linear;
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform;
 }
 
 .song-progress-label {
@@ -1506,7 +1518,6 @@ select:focus-visible {
 
 .results-modal.visible .results-modal-card {
   transform: scale(1) translateY(0);
-  filter: blur(0);
 }
 
 .results-modal-card {
@@ -1521,13 +1532,17 @@ select:focus-visible {
   overflow-y: auto;
   box-shadow: 0px 0px 0px 1px rgba(169, 206, 224, 0.18), 0 0 48px rgba(32, 217, 181, 0.12);
   transform: scale(0.95) translateY(8px);
-  filter: blur(4px);
-  transition: transform 300ms cubic-bezier(0.34, 1.56, 0.64, 1), filter 300ms ease;
+  transition: transform 300ms cubic-bezier(0.2, 0, 0, 1);
 }
 
 .results-modal-icon {
-  font-size: 2.5rem;
+  display: flex;
+  justify-content: center;
   margin: 0 0 0.35rem;
+}
+
+.results-modal-icon .brand-mark {
+  width: 52px;
 }
 
 .results-modal-title {
@@ -1633,7 +1648,6 @@ select:focus-visible {
 .results-lane-fill {
   height: 100%;
   border-radius: 4px;
-  transition: width 400ms ease;
 }
 
 .results-lane-pct {
@@ -1661,9 +1675,8 @@ select:focus-visible {
   font-weight: 700;
   cursor: pointer;
   min-height: 44px;
-  transition: border-color 0.15s;
+  transition: border-color 150ms cubic-bezier(0.2, 0, 0, 1);
   width: auto;
-  min-height: auto;
 }
 
 .btn-back-library:hover {
@@ -1711,6 +1724,182 @@ select:focus-visible {
   .results-stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+/* ── Stage streak (above-the-fold combo heat inside the play area) ── */
+
+.stage-streak {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 2.2vw, 1.6rem);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: #cfe6f2;
+  opacity: 0;
+  transition: opacity 120ms cubic-bezier(0.2, 0, 0, 1);
+  pointer-events: none;
+  text-shadow: 0 0 12px rgba(0, 0, 0, 0.55);
+}
+
+.stage-streak.show {
+  opacity: 1;
+}
+
+.stage-streak.hot {
+  color: #ffd884;
+  text-shadow: 0 0 18px rgba(255, 170, 50, 0.5);
+}
+
+.stage-streak.fire {
+  font-size: clamp(1.6rem, 3.4vw, 2.7rem);
+  background: linear-gradient(180deg, #ffd77f 0%, #ff9e3d 45%, #ff5f73 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(0 0 20px rgba(255, 158, 61, 0.6));
+}
+
+/* Heat bleeds into the lane edges while the 24+ combo holds */
+.game-area.on-fire {
+  box-shadow:
+    0px 0px 0px 2px rgba(255, 158, 61, 0.75),
+    inset 0 0 64px rgba(255, 95, 115, 0.14),
+    0 0 34px rgba(255, 122, 61, 0.28);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-streak {
+    transition: none;
+  }
+}
+
+/* ── Results: hero stats, honest lanes, new best, attribution ── */
+
+.results-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.results-stat.hero {
+  padding: 0.6rem 0.5rem;
+  border-color: rgba(169, 206, 224, 0.18);
+}
+
+.results-stat.hero span {
+  font-size: 0.72rem;
+}
+
+.results-stat.hero strong {
+  font-size: 1.7rem;
+  line-height: 1.15;
+}
+
+.results-stats-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.results-stats-grid .results-stat strong {
+  font-size: 0.92rem;
+  color: var(--text-soft);
+}
+
+.results-lane-item.no-notes {
+  opacity: 0.45;
+}
+
+.results-lane-item.no-notes .results-lane-bar {
+  background: transparent;
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+}
+
+.results-lane-item.no-notes .results-lane-pct {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.9;
+}
+
+.results-newbest {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  color: var(--bg-0);
+  background: linear-gradient(90deg, var(--accent-1), var(--accent-3));
+  border-radius: 6px;
+  padding: 0.22rem 0.6rem;
+  margin: -0.25rem 0 0.65rem;
+}
+
+.results-attrib {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin: 0 0 1rem;
+  opacity: 0.5;
+}
+
+.results-attrib-mark {
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+}
+
+.results-attrib-url {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  color: var(--text-soft);
+}
+
+.btn-try-next {
+  background: rgba(114, 216, 255, 0.14);
+  color: var(--accent-3);
+  border: 2px solid rgba(114, 216, 255, 0.45);
+  border-radius: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 44px;
+  width: auto;
+  transition: border-color 150ms cubic-bezier(0.2, 0, 0, 1), background 150ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.btn-try-next:hover {
+  border-color: rgba(114, 216, 255, 0.8);
+  background: rgba(114, 216, 255, 0.22);
+}
+
+.btn-try-next:focus-visible {
+  outline: 3px solid rgba(114, 216, 255, 0.95);
+  outline-offset: 2px;
+}
+
+/* ── Library card best-grade badge ───────────────────────────── */
+
+.song-card-best {
+  display: inline-block;
+  width: fit-content;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.12rem 0.4rem;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(6, 16, 25, 0.7);
 }
 
 /* ── Reduced Motion ───────────────────────────────────────────── */
