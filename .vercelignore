@@ -1,0 +1,13 @@
+# Production serves only the runtime: index.html, app.js, songs.js, styles.css,
+# favicon.svg, og.png. Everything below is internal and must not be reachable.
+.git
+.claude
+.gstack
+.stitch
+scripts
+BRAND.md
+DESIGN.md
+PERSONA.md
+README.md
+SUGGESTIONS.md
+start_game.sh
